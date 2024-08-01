@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//rev2
+//rev1
 
 #include <unistd.h>
 
@@ -41,7 +41,7 @@
 using namespace std;
 using namespace cv;
 
-const int TNUM = 6; //쓰래드 돌릴 갯수, FD하나만 할 때는 1 (원래는 6개라 6이었음)
+const int TNUM = 4; //쓰래드 돌릴 갯수, FD하나만 할 때는 1 (원래는 6개라 6이었음)
 
 //For calculating FPS
 const int FPS_QUEUE_SIZE = 30;  // Number of frames to average for FPS calculation
@@ -101,7 +101,7 @@ void Read(bool& is_reading) {
       mtx_read_queue.lock();
       //읽은 frame을 index와 함께 대기열에 추가
       //read_index는 각 frame에 고유번호를 부여하고, 추가 후 증가
-      read_queue.push(make_pair(read_index++, img));
+      read_queue.push(make_pair(read_index++, img));  //End of the read_queue에 (index, img)를 추가
       //mutex 잠금 해제
       mtx_read_queue.unlock();
     } else {
@@ -169,17 +169,6 @@ void Display(bool& is_displaying) {
             // Display the frame
             cv::imshow("Video Analysis", current_frame.second);
             
-            // Check for user input to exit
-            int key = cv::waitKey(1);
-            if (key == 'q' || key == 27) {  // 'q' or ESC key
-                // If 'q' or ESC is pressed, signal all threads to stop
-                is_displaying = false;
-                is_reading = false;
-                for (auto& running : is_running) {
-                    running = false;
-                }
-                break;
-            }
         }
     }
 
@@ -187,7 +176,6 @@ void Display(bool& is_displaying) {
     cv::destroyAllWindows();
 }
 
-/*여기서부터 수정 시작함*/
 //runFacedetect 구조체 저장
 struct FaceDetectResult {
     struct BoundingBox {
@@ -512,7 +500,7 @@ void RunFaceDetect(vart::Runner* runner, bool& is_running) {
             sharedResults.results.push_back(result);
             sharedResults.frame = img.clone();
             sharedResults.frame_index = index;
-            sharedResults.cv.notify_one();
+            sharedResults.cv.notify_one();  //waiting thread하나를 wake up 시킴
         }
     }
 
@@ -521,7 +509,7 @@ void RunFaceDetect(vart::Runner* runner, bool& is_running) {
         std::lock_guard<std::mutex> lock(sharedResults.mutex);
         sharedResults.finished = true;
     }
-    sharedResults.cv.notify_all();
+    sharedResults.cv.notify_all();  //모든 waiting thread를 wake up 시킴
 
     // Clean up allocated memory
     delete[] imageInputs;
@@ -596,14 +584,14 @@ void NormalizeInputDataRGB(const uint8_t* input, int rows, int cols,
 void runFacerecog(vart::Runner* runner, bool& is_running) {
   std::cout << "Face Recognition Thread Started\n";
 
-  // Load pre-computed embeddings (as before)
+  // Load pre-computed embeddings
   std::vector<std::vector<float>> embedding_arr;
   std::vector<float> embedding_norm_arr;
   std::vector<std::string> embedding_class_arr;
   auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
   std::tie(embedding_arr, embedding_norm_arr, embedding_class_arr) = load_embeddings(embeddings_npzpath);
 
-  // Get model input and output details (as before)
+  // Get model input and output details 
   auto outputTensors = runner->get_output_tensors();
   auto inputTensors = runner->get_input_tensors();
   auto out_dims = outputTensors[0]->get_shape();
@@ -630,7 +618,7 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
     {
       std::unique_lock<std::mutex> lock(sharedResults.mutex);
       sharedResults.cv.wait(lock, [&]{
-        return !sharedResults.results.empty() || sharedResults.finished;
+        return !sharedResults.results.empty() || sharedResults.finished;  //lamda function returns true when 'not empty' or 'finished'
       });
 
       // Check if we're finished and no more results
@@ -663,7 +651,7 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         std::vector<int8_t> imageInputs(inSize * batchSize, 0);
         std::vector<int8_t> FCResult(batchSize * outSize, 0);
 
-        // Convert image to input format (as before)
+        // Convert image to input format
         for (int h = 0; h < inHeight; h++) {
           for (int w = 0; w < inWidth; w++) {
             for (int c = 0; c < 3; c++) {
@@ -674,7 +662,7 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
           }
         }
 
-        // Prepare input and output tensors (as before)
+        // Prepare input and output tensors
         std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
         std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
 
@@ -683,7 +671,7 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         inputsPtr.push_back(inputs[0].get());
         outputsPtr.push_back(outputs[0].get());
 
-        // Execute the DPU (as before)
+        // Execute the DPU
         auto job_id = runner->execute_async(inputsPtr, outputsPtr);
         auto status = runner->wait(job_id.first, -1);
         if (status != 0) {
@@ -691,7 +679,7 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
           continue;
         }
 
-        // Post-processing and face recognition (as before)
+        // Post-processing and face recognition 
         std::vector<float> float_output(outSize);
         for (int j = 0; j < outSize; ++j) {
           float_output[j] = static_cast<float>(FCResult[j]) * output_scale;
@@ -712,7 +700,7 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
           recognized_label = embedding_class_arr[max_similarity_index];
         }
 
-        // Draw bounding box and label on the frame (as before)
+        // Draw bounding box and label on the frame
         const auto& r = faceDetectResult.rects[i];
         cv::rectangle(frame, cv::Rect(r.x * frame.cols, r.y * frame.rows,
                                       r.width * frame.cols, r.height * frame.rows),
@@ -771,10 +759,10 @@ int main(int argc, char** argv) {
   auto subgraph_fd = get_dpu_subgraph(graph_fd.get());
   auto subgraph_fr = get_dpu_subgraph(graph_fr.get());
 
-  CHECK_EQ(subgraph_fd.size(), 1u) //DPU subgraph가 정확히 하나인지 확인 
+  CHECK_EQ(subgraph_fd.size(), 1u) //DPU subgraph가 정확히 하나인지 확인
       << "Facedetect should have one and only one dpu subgraph.";
   LOG(INFO) << "create running for subgraph: " << subgraph_fd[0]->get_name(); //추출된 subgraph의 이름을 로그에 출력
-  CHECK_EQ(subgraph_fr.size(), 1u) //DPU subgraph가 정확히 하나인지 확인 
+  CHECK_EQ(subgraph_fr.size(), 1u) //DPU subgraph가 정확히 하나인지 확인
       << "Facerecog should have one and only one dpu subgraph.";
   LOG(INFO) << "create running for subgraph: " << subgraph_fr[0]->get_name(); //추출된 subgraph의 이름을 로그에 출력
 
@@ -809,7 +797,7 @@ int main(int argc, char** argv) {
   shapes.outTensorList = outshapes_fr;
   getTensorShape(runner_fd.get(), &shapes, inputCnt_fd, outputCnt_fd);
 
-  // Run tasks for SSD
+  // Run tasks for FD, FR
   //vector<thread> threads(TNUM); // TNUM(6)개의 스레드를 저장할 벡터 생성
   vector<thread> threads;
   is_running.fill(true);  // 모든 스레드의 실행 상태를 true로 초기화
@@ -824,8 +812,8 @@ int main(int argc, char** argv) {
   threads.push_back(thread(RunFaceDetect, runner_fd.get(), ref(is_running[0])));
   threads.push_back(thread(runFacerecog, runner_fr.get(), ref(is_running[1])));
 
-  threads.push_back(thread(RunFaceDetect, runner_fd.get(), ref(is_running[2])));
-  threads.push_back(thread(runFacerecog, runner_fr.get(), ref(is_running[3])));
+  //threads.push_back(thread(RunFaceDetect, runner_fd.get(), ref(is_running[2])));
+  //threads.push_back(thread(runFacerecog, runner_fr.get(), ref(is_running[3])));
   // 비디오 프레임 읽기 스레드 생성 및 시작
   threads.push_back(thread(Read, ref(is_reading)));
   // 결과 표시 스레드 생성 및 시작
@@ -835,9 +823,8 @@ int main(int argc, char** argv) {
   
 
   // 모든 스레드가 완료될 때까지 대기
-  // TNUM(6)개의 SSD 스레드 + 읽기 스레드 + 표시 스레드 = 총 8개 스레드 
-  for (int i = 0; i < 2 + TNUM; ++i) {
-    threads[i].join();
+  for (auto& t : threads) {
+      t.join();
   }
 
   // 비디오 리소스 해제
