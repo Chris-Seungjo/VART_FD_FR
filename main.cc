@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//rev1
+//rev3
 
 #include <unistd.h>
 
@@ -169,6 +169,17 @@ void Display(bool& is_displaying) {
             // Display the frame
             cv::imshow("Video Analysis", current_frame.second);
             
+            // Check for user input to exit
+            int key = cv::waitKey(1);
+            if (key == 'q' || key == 27) {  // 'q' or ESC key
+                // If 'q' or ESC is pressed, signal all threads to stop
+                is_displaying = false;
+                is_reading = false;
+                for (auto& running : is_running) {
+                    running = false;
+                }
+                break;
+            }
         }
     }
 
@@ -375,146 +386,191 @@ void applyNMS(const std::vector<std::vector<float>>& boxes, const std::vector<fl
 }
 
 void RunFaceDetect(vart::Runner* runner, bool& is_running) {
-    // Get tensors
-    auto outputTensors = runner->get_output_tensors();
-    auto inputTensors = runner->get_input_tensors();
-    auto out_dims = outputTensors[0]->get_shape();
-    auto in_dims = inputTensors[0]->get_shape();
+  std::cout << "Face Detection Thread Started\n";
 
-    // Get scales
-    auto input_scale = get_input_scale(inputTensors[0]);
-    auto output_scale = get_output_scale(outputTensors[0]);
+  // Get tensors
+  auto outputTensors = runner->get_output_tensors();
+  auto inputTensors = runner->get_input_tensors();
+  auto out_dims = outputTensors[0]->get_shape();
+  auto in_dims = inputTensors[0]->get_shape();
 
-    // Set up sizes
-    int outSize = out_dims[1] * out_dims[2] * out_dims[3];
-    int inSize = in_dims[1] * in_dims[2] * in_dims[3];
-    int inHeight = in_dims[1];
-    int inWidth = in_dims[2];
-    int batchSize = in_dims[0];
+  // Get scales
+  auto input_scale = get_input_scale(inputTensors[0]);
+  auto output_scale = get_output_scale(outputTensors[0]);
 
-    // Allocate memory for input images and results
-    int8_t* imageInputs = new int8_t[inSize * batchSize];
-    int8_t* FCResult = new int8_t[batchSize * outSize];
+  // Set up sizes
+  int outSize = out_dims[1] * out_dims[2] * out_dims[3];
+  int inSize = in_dims[1] * in_dims[2] * in_dims[3];
+  int inHeight = in_dims[1];
+  int inWidth = in_dims[2];
+  int batchSize = in_dims[0];
 
-    // Allocate memory for prediction scores
-    float* pred = new (std::nothrow) float[out_dims[1] * out_dims[2] * 2];
-    if (!pred) {
-        std::cerr << "Failed to allocate memory for pred" << std::endl;
-        delete[] imageInputs;
-        delete[] FCResult;
-        return;
-    }
+  // Allocate memory for input images and results
+  int8_t* imageInputs = new int8_t[inSize * batchSize];
+  int8_t* FCResult = new int8_t[batchSize * outSize];
 
-    // Set up mean and scale values for image preprocessing
-    std::vector<float> mean = {128.0f, 128.0f, 128.0f};
-    std::vector<float> scale = {1.0f, 1.0f, 1.0f};
-
-    // Main processing loop
-    while (is_running) {
-        // Get an image from read queue
-        int index;
-        cv::Mat img;
-        mtx_read_queue.lock();
-        if (read_queue.empty()) {
-          mtx_read_queue.unlock();
-          if (is_reading) {
-            continue;
-          } else {
-            is_running = false;
-            break;
-          }
-        } else {
-          index = read_queue.front().first;
-          img = read_queue.front().second;
-          read_queue.pop();
-          mtx_read_queue.unlock();
-        }
-
-        // Resize image to match model input dimensions
-        cv::Mat resized;
-        cv::resize(img, resized, cv::Size(inWidth, inHeight));
-
-        // Prepare input data (Preprocessing)
-        setImageBGR({resized}, runner, imageInputs, mean, scale);
-
-        // Set up input and output tensors for model execution
-        std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
-        std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
-        
-        inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs, inputTensors[0]));
-        outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult, outputTensors[0]));
-        inputsPtr.push_back(inputs[0].get());
-        outputsPtr.push_back(outputs[0].get());
-
-        // Run DPU
-        auto job_id = runner->execute_async(inputsPtr, outputsPtr);
-        auto status = runner->wait(job_id.first, -1);
-        CHECK_EQ(status, 0) << "failed to run dpu";
-
-        // Set detection and NMS thresholds
-        const float det_threshold = 0.9f;
-        const float nms_threshold = 0.3f;
-        
-        // Calculate prediction scores
-        for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
-            pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);  // background score
-            pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;   // face score
-        }    
-
-        // Apply filtering to get potential face bounding boxes
-        std::vector<std::vector<float>> boxes = FilterBox(
-            output_scale,  // bb_out_scale
-            det_threshold,
-            FCResult,      // bbout
-            out_dims[2],   // width
-            out_dims[1],   // height
-            pred           // pred
-        );
-
-        // Extract scores from boxes
-        std::vector<float> scores;
-        for (auto& box : boxes) {
-            scores.push_back(box[4]);
-        }
-
-        // Apply Non-Maximum Suppression (NMS)
-        std::vector<size_t> res_k;
-        int max_faces = 1; // Limit to 1 face, adjust as needed
-        applyNMS(boxes, scores, nms_threshold, det_threshold, res_k, max_faces);
-
-        // Create FaceDetectResult structure with detected face rectangles
-        FaceDetectResult result{inWidth, inHeight};
-        for (auto& k : res_k) {
-            result.rects.push_back(FaceDetectResult::BoundingBox{
-                boxes[k][0] / inWidth,
-                boxes[k][1] / inHeight,
-                (boxes[k][2] - boxes[k][0]) / inWidth,
-                (boxes[k][3] - boxes[k][1]) / inHeight,
-                boxes[k][4]
-            });
-        }
-
-        // Store the result in the shared structure
-        {
-            std::lock_guard<std::mutex> lock(sharedResults.mutex);
-            sharedResults.results.push_back(result);
-            sharedResults.frame = img.clone();
-            sharedResults.frame_index = index;
-            sharedResults.cv.notify_one();  //waiting thread하나를 wake up 시킴
-        }
-    }
-
-    // Signal that face detection is finished
-    {
-        std::lock_guard<std::mutex> lock(sharedResults.mutex);
-        sharedResults.finished = true;
-    }
-    sharedResults.cv.notify_all();  //모든 waiting thread를 wake up 시킴
-
-    // Clean up allocated memory
+  // Allocate memory for prediction scores
+  float* pred = new (std::nothrow) float[out_dims[1] * out_dims[2] * 2];
+  if (!pred) {
+    std::cerr << "Failed to allocate memory for pred" << std::endl;
     delete[] imageInputs;
     delete[] FCResult;
-    delete[] pred;
+    return;
+  }
+
+  // Set up mean and scale values for image preprocessing
+  std::vector<float> mean = {128.0f, 128.0f, 128.0f};
+  std::vector<float> scale = {1.0f, 1.0f, 1.0f};
+
+  // Timing variables
+  auto total_start_time = std::chrono::high_resolution_clock::now();
+  int frame_count = 0;
+  double total_latency = 0.0;
+  
+  // Main processing loop
+  while (is_running) {
+    auto frame_start_time = std::chrono::high_resolution_clock::now();
+    
+    // Get an image from read queue
+    int index;
+    cv::Mat img;
+    
+    auto queue_start = std::chrono::high_resolution_clock::now();
+    mtx_read_queue.lock();
+    if (read_queue.empty()) {
+      mtx_read_queue.unlock();
+      if (is_reading) {
+        continue;
+      } else {
+        is_running = false;
+        break;
+      }
+    } else {
+      index = read_queue.front().first;
+      img = read_queue.front().second;
+      read_queue.pop();
+      mtx_read_queue.unlock();
+    }
+    auto queue_end = std::chrono::high_resolution_clock::now();
+    auto queue_duration = std::chrono::duration_cast<std::chrono::microseconds>(queue_end - queue_start);
+
+    // Resize image to match model input dimensions
+    auto resize_start = std::chrono::high_resolution_clock::now();
+    cv::Mat resized;
+    cv::resize(img, resized, cv::Size(inWidth, inHeight));
+    auto resize_end = std::chrono::high_resolution_clock::now();
+    auto resize_duration = std::chrono::duration_cast<std::chrono::microseconds>(resize_end - resize_start);
+
+    // Prepare input data (Preprocessing)
+    auto preprocess_start = std::chrono::high_resolution_clock::now();
+    setImageBGR({resized}, runner, imageInputs, mean, scale);
+    auto preprocess_end = std::chrono::high_resolution_clock::now();
+    auto preprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(preprocess_end - preprocess_start);
+
+    // Set up input and output tensors for model execution
+    std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
+    std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
+    
+    inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs, inputTensors[0]));
+    outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult, outputTensors[0]));
+    inputsPtr.push_back(inputs[0].get());
+    outputsPtr.push_back(outputs[0].get());
+
+    // Run DPU
+    auto dpu_start = std::chrono::high_resolution_clock::now();
+    auto job_id = runner->execute_async(inputsPtr, outputsPtr);
+    auto status = runner->wait(job_id.first, -1);
+    CHECK_EQ(status, 0) << "failed to run dpu";
+    auto dpu_end = std::chrono::high_resolution_clock::now();
+    auto dpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(dpu_end - dpu_start);
+
+    // Set detection and NMS thresholds
+    const float det_threshold = 0.9f;
+    const float nms_threshold = 0.3f;
+    
+    // Calculate prediction scores
+    auto postprocess_start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
+      pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);  // background score
+      pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;   // face score
+    }    
+
+    // Apply filtering to get potential face bounding boxes
+    std::vector<std::vector<float>> boxes = FilterBox(
+        output_scale,  // bb_out_scale
+        det_threshold,
+        FCResult,      // bbout
+        out_dims[2],   // width
+        out_dims[1],   // height
+        pred           // pred
+    );
+
+    // Extract scores from boxes
+    std::vector<float> scores;
+    for (auto& box : boxes) {
+      scores.push_back(box[4]);
+    }
+
+    // Apply Non-Maximum Suppression (NMS)
+    std::vector<size_t> res_k;
+    int max_faces = 1; // Adjust as needed
+    applyNMS(boxes, scores, nms_threshold, det_threshold, res_k, max_faces);
+
+    // Create FaceDetectResult structure with detected face rectangles
+    FaceDetectResult result{inWidth, inHeight};
+    for (auto& k : res_k) {
+      result.rects.push_back(FaceDetectResult::BoundingBox{
+          boxes[k][0] / inWidth,
+          boxes[k][1] / inHeight,
+          (boxes[k][2] - boxes[k][0]) / inWidth,
+          (boxes[k][3] - boxes[k][1]) / inHeight,
+          boxes[k][4]
+      });
+    }
+    auto postprocess_end = std::chrono::high_resolution_clock::now();
+    auto postprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(postprocess_end - postprocess_start);
+
+    // Store the result in the shared structure
+    auto store_start = std::chrono::high_resolution_clock::now();
+    {
+      std::lock_guard<std::mutex> lock(sharedResults.mutex);
+      sharedResults.results.push_back(result);
+      sharedResults.frame = img.clone();
+      sharedResults.frame_index = index;
+      sharedResults.cv.notify_one();
+    }
+    auto store_end = std::chrono::high_resolution_clock::now();
+    auto store_duration = std::chrono::duration_cast<std::chrono::microseconds>(store_end - store_start);
+
+    auto frame_end_time = std::chrono::high_resolution_clock::now();
+    auto frame_duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end_time - frame_start_time);
+    
+    frame_count++;
+    total_latency += frame_duration.count();
+
+    std::cout << "Face Detection latency for frame " << frame_count << ": " << frame_duration.count() << " ms" << std::endl;
+    std::cout << "  Queue: " << queue_duration.count() << " µs" << std::endl;
+    std::cout << "  Resize: " << resize_duration.count() << " µs" << std::endl;
+    std::cout << "  Preprocess: " << preprocess_duration.count() << " µs" << std::endl;
+    std::cout << "  DPU execution: " << dpu_duration.count() << " µs" << std::endl;
+    std::cout << "  Postprocess: " << postprocess_duration.count() << " µs" << std::endl;
+    std::cout << "  Store results: " << store_duration.count() << " µs" << std::endl;
+  }
+
+  auto total_end_time = std::chrono::high_resolution_clock::now();
+  auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(total_end_time - total_start_time);
+  double average_latency = total_latency / frame_count;
+  
+  std::cout << "Total Face Detection frames processed: " << frame_count << std::endl;
+  std::cout << "Face Detection - Average latency: " << average_latency << " ms" << std::endl;
+  std::cout << "Face Detection - Total runtime: " << total_duration.count() << " ms" << std::endl;
+
+  // Clean up allocated memory
+  delete[] imageInputs;
+  delete[] FCResult;
+  delete[] pred;
+
+  std::cout << "Face Detection Thread Finished\n";
 }
 
 /* Run Facerecog */
@@ -585,11 +641,15 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
   std::cout << "Face Recognition Thread Started\n";
 
   // Load pre-computed embeddings
+  auto embeddings_start = std::chrono::high_resolution_clock::now();
   std::vector<std::vector<float>> embedding_arr;
   std::vector<float> embedding_norm_arr;
   std::vector<std::string> embedding_class_arr;
   auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
   std::tie(embedding_arr, embedding_norm_arr, embedding_class_arr) = load_embeddings(embeddings_npzpath);
+  auto embeddings_end = std::chrono::high_resolution_clock::now();
+  auto embeddings_duration = std::chrono::duration_cast<std::chrono::milliseconds>(embeddings_end - embeddings_start);
+  std::cout << "Embeddings loading time: " << embeddings_duration.count() << " ms" << std::endl;
 
   // Get model input and output details 
   auto outputTensors = runner->get_output_tensors();
@@ -608,17 +668,25 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
   std::vector<float> mean = {128.0f, 128.0f, 128.0f};
   std::vector<float> scale = {0.0078125f, 0.0078125f, 0.0078125f};
 
+  // Timing variables
+  auto total_start_time = std::chrono::high_resolution_clock::now();
+  int frame_count = 0;
+  double total_latency = 0.0;
+
   while (is_running) {
+    auto frame_start_time = std::chrono::high_resolution_clock::now();
+
     FaceDetectResult faceDetectResult;
     cv::Mat frame;
     int frame_index;
     bool have_result = false;
 
     // Acquire lock and wait for results or finish signal
+    auto wait_start = std::chrono::high_resolution_clock::now();
     {
       std::unique_lock<std::mutex> lock(sharedResults.mutex);
       sharedResults.cv.wait(lock, [&]{
-        return !sharedResults.results.empty() || sharedResults.finished;  //lamda function returns true when 'not empty' or 'finished'
+        return !sharedResults.results.empty() || sharedResults.finished;
       });
 
       // Check if we're finished and no more results
@@ -635,9 +703,12 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         have_result = true;
       }
     }
+    auto wait_end = std::chrono::high_resolution_clock::now();
+    auto wait_duration = std::chrono::duration_cast<std::chrono::microseconds>(wait_end - wait_start);
 
-    // If we have a result, process it
     if (have_result) {
+      // Crop faces
+      auto crop_start = std::chrono::high_resolution_clock::now();
       std::vector<cv::Mat> croppedFaces;
       for (const auto &r : faceDetectResult.rects) {
         cv::Mat cropped_img = frame(cv::Rect(r.x * frame.cols, r.y * frame.rows,
@@ -646,12 +717,16 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         cv::resize(cropped_img, resized_img, cv::Size(inWidth, inHeight));
         croppedFaces.push_back(resized_img);
       }
+      auto crop_end = std::chrono::high_resolution_clock::now();
+      auto crop_duration = std::chrono::duration_cast<std::chrono::microseconds>(crop_end - crop_start);
 
+      auto process_start = std::chrono::high_resolution_clock::now();
       for (size_t i = 0; i < croppedFaces.size(); ++i) {
         std::vector<int8_t> imageInputs(inSize * batchSize, 0);
         std::vector<int8_t> FCResult(batchSize * outSize, 0);
 
         // Convert image to input format
+        auto preprocess_start = std::chrono::high_resolution_clock::now();
         for (int h = 0; h < inHeight; h++) {
           for (int w = 0; w < inWidth; w++) {
             for (int c = 0; c < 3; c++) {
@@ -661,6 +736,8 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
             }
           }
         }
+        auto preprocess_end = std::chrono::high_resolution_clock::now();
+        auto preprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(preprocess_end - preprocess_start);
 
         // Prepare input and output tensors
         std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
@@ -672,14 +749,18 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         outputsPtr.push_back(outputs[0].get());
 
         // Execute the DPU
+        auto dpu_start = std::chrono::high_resolution_clock::now();
         auto job_id = runner->execute_async(inputsPtr, outputsPtr);
         auto status = runner->wait(job_id.first, -1);
         if (status != 0) {
           std::cerr << "DPU execution failed with status " << status << std::endl;
           continue;
         }
+        auto dpu_end = std::chrono::high_resolution_clock::now();
+        auto dpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(dpu_end - dpu_start);
 
         // Post-processing and face recognition 
+        auto postprocess_start = std::chrono::high_resolution_clock::now();
         std::vector<float> float_output(outSize);
         for (int j = 0; j < outSize; ++j) {
           float_output[j] = static_cast<float>(FCResult[j]) * output_scale;
@@ -699,8 +780,11 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         if (max_similarity_index != -1 && max_similarity > 0.6) {
           recognized_label = embedding_class_arr[max_similarity_index];
         }
+        auto postprocess_end = std::chrono::high_resolution_clock::now();
+        auto postprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(postprocess_end - postprocess_start);
 
         // Draw bounding box and label on the frame
+        auto draw_start = std::chrono::high_resolution_clock::now();
         const auto& r = faceDetectResult.rects[i];
         cv::rectangle(frame, cv::Rect(r.x * frame.cols, r.y * frame.rows,
                                       r.width * frame.cols, r.height * frame.rows),
@@ -708,17 +792,49 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         cv::putText(frame, recognized_label,
                     cv::Point(r.x * frame.cols, r.y * frame.rows - 10),
                     cv::FONT_HERSHEY_SIMPLEX, 0.9, cv::Scalar(0, 255, 0), 2);
+        auto draw_end = std::chrono::high_resolution_clock::now();
+        auto draw_duration = std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start);
 
-        std::cout << "Recognized face: " << recognized_label << " (Similarity: " << max_similarity << ")" << std::endl;
+        std::cout << "Face " << i+1 << " Recognition timings:" << std::endl;
+        std::cout << "  Preprocess: " << preprocess_duration.count() << " µs" << std::endl;
+        std::cout << "  DPU execution: " << dpu_duration.count() << " µs" << std::endl;
+        std::cout << "  Postprocess: " << postprocess_duration.count() << " µs" << std::endl;
+        std::cout << "  Drawing: " << draw_duration.count() << " µs" << std::endl;
+        std::cout << "  Recognized as: " << recognized_label << " (Similarity: " << max_similarity << ")" << std::endl;
       }
+      auto process_end = std::chrono::high_resolution_clock::now();
+      auto process_duration = std::chrono::duration_cast<std::chrono::microseconds>(process_end - process_start);
 
       // Put processed frame into display queue
+      auto display_start = std::chrono::high_resolution_clock::now();
       mtx_display_queue.lock();
       display_queue.push(std::make_pair(frame_index, frame));
       mtx_display_queue.unlock();
+      auto display_end = std::chrono::high_resolution_clock::now();
+      auto display_duration = std::chrono::duration_cast<std::chrono::microseconds>(display_end - display_start);
+
+      auto frame_end_time = std::chrono::high_resolution_clock::now();
+      auto frame_duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end_time - frame_start_time);
+    
+      frame_count++;
+      total_latency += frame_duration.count();
+
+      std::cout << "Face Recognition latency for frame " << frame_count << ": " << frame_duration.count() << " ms" << std::endl;
+      std::cout << "  Wait for result: " << wait_duration.count() << " µs" << std::endl;
+      std::cout << "  Crop faces: " << crop_duration.count() << " µs" << std::endl;
+      std::cout << "  Process faces: " << process_duration.count() << " µs" << std::endl;
+      std::cout << "  Add to display queue: " << display_duration.count() << " µs" << std::endl;
     }
   }
 
+  auto total_end_time = std::chrono::high_resolution_clock::now();
+  auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(total_end_time - total_start_time);
+  double average_latency = total_latency / frame_count;
+
+  std::cout << "Face Recognition - Total frames processed:" << frame_count << std::flush;
+  std::cout << "Face Recognition - Average latency: " << average_latency << " ms" << std::flush;
+  std::cout << "Face Recognition - Total runtime: " << total_duration.count() << " ms" << std::flush;
+  
   std::cout << "Face Recognition Thread Finished\n";
 }
 
@@ -823,8 +939,9 @@ int main(int argc, char** argv) {
   
 
   // 모든 스레드가 완료될 때까지 대기
-  for (auto& t : threads) {
-      t.join();
+  // TNUM(6)개의 SSD 스레드 + 읽기 스레드 + 표시 스레드 = 총 8개 스레드 
+  for (int i = 0; i < 2 + TNUM; ++i) {
+    threads[i].join();
   }
 
   // 비디오 리소스 해제
