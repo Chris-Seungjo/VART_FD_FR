@@ -1,0 +1,727 @@
+root@xilinx-kv260-starterkit-20221:~/VART/video_fd_fr# ./video_fd_fr ./all5_720p.mp4
+Opening video: ./all5_720p.mp4
+[ WARN:0] global /usr/src/debug/opencv/4.5.2-r0/git/modules/videoio/src/cap_gstreamer.cpp (1044) open OpenCV | GStreamer warning: unable to query duration of stream
+[ WARN:0] global /usr/src/debug/opencv/4.5.2-r0/git/modules/videoio/src/cap_gstreamer.cpp (1081) open OpenCV | GStreamer warning: Cannot query video position: status=1, value=0, duration=-1
+Original video FPS: 60
+Read timings (ms) - Read: 4.974, Queue wait: 0.000, Push: 3.957, Total loop: 8.941
+Read timings (ms) - Read: 216.845, Queue wait: 0.000, Push: 4.133, Total loop: 220.983
+Read timings (ms) - Read: 215.377, Queue wait: 0.000, Push: 4.096, Total loop: 219.479
+Display timings (ms) - Queue wait: 0.002, Pop: 0.013, Clone: 3.892, Text: 0.838, Imshow: 4.267, WaitKey: 20.528, Total loop: 29.551
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.405, Text: 0.739, Imshow: 0.868, WaitKey: 49.491, Total loop: 52.521
+Display timings (ms) - Queue wait: 0.001, Pop: 0.002, Clone: 1.503, Text: 0.743, Imshow: 0.918, WaitKey: 1.353, Total loop: 4.529
+Read timings (ms) - Read: 220.217, Queue wait: 0.000, Push: 4.169, Total loop: 224.391
+Display timings (ms) - Queue wait: 38.113, Pop: 0.001, Clone: 1.962, Text: 0.739, Imshow: 0.950, WaitKey: 22.573, Total loop: 64.349
+Read timings (ms) - Read: 214.148, Queue wait: 0.000, Push: 1.563, Total loop: 215.715
+Read timings (ms) - Read: 219.101, Queue wait: 0.000, Push: 4.020, Total loop: 223.126
+Read timings (ms) - Read: 215.971, Queue wait: 0.000, Push: 4.078, Total loop: 220.055
+Read timings (ms) - Read: 215.846, Queue wait: 0.000, Push: 4.109, Total loop: 219.961
+Read timings (ms) - Read: 215.551, Queue wait: 0.000, Push: 4.024, Total loop: 219.581
+Display timings (ms) - Queue wait: 189.522, Pop: 0.002, Clone: 1.763, Text: 0.732, Imshow: 0.898, WaitKey: 957.408, Total loop: 1150.338
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.527, Text: 0.787, Imshow: 0.912, WaitKey: 22.090, Total loop: 25.336
+Read timings (ms) - Read: 218.903, Queue wait: 0.000, Push: 1.722, Total loop: 220.630
+Read timings (ms) - Read: 218.087, Queue wait: 0.000, Push: 1.598, Total loop: 219.691
+Read timings (ms) - Read: 218.116, Queue wait: 0.000, Push: 4.006, Total loop: 222.127
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.380, Text: 0.744, Imshow: 1.213, WaitKey: 670.994, Total loop: 674.350
+Read timings (ms) - Read: 218.647, Queue wait: 0.000, Push: 1.332, Total loop: 219.983
+Read timings (ms) - Read: 220.342, Queue wait: 0.000, Push: 4.053, Total loop: 224.400
+Read timings (ms) - Read: 213.341, Queue wait: 0.000, Push: 3.974, Total loop: 217.320
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.401, Text: 0.743, Imshow: 0.941, WaitKey: 662.108, Total loop: 665.212
+Read timings (ms) - Read: 217.523, Queue wait: 0.000, Push: 1.728, Total loop: 219.256
+Read timings (ms) - Read: 217.488, Queue wait: 0.000, Push: 4.107, Total loop: 221.601
+Read timings (ms) - Read: 215.057, Queue wait: 0.000, Push: 4.093, Total loop: 219.155
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.474, Text: 0.730, Imshow: 0.929, WaitKey: 664.748, Total loop: 667.904
+Read timings (ms) - Read: 218.367, Queue wait: 0.000, Push: 1.526, Total loop: 219.898
+Read timings (ms) - Read: 217.402, Queue wait: 0.000, Push: 3.994, Total loop: 221.402
+Read timings (ms) - Read: 215.248, Queue wait: 0.000, Push: 4.093, Total loop: 219.348
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.703, Text: 0.728, Imshow: 0.901, WaitKey: 661.466, Total loop: 664.819
+Read timings (ms) - Read: 217.753, Queue wait: 0.000, Push: 1.540, Total loop: 219.297
+Read timings (ms) - Read: 217.507, Queue wait: 0.000, Push: 4.134, Total loop: 221.647
+Read timings (ms) - Read: 215.117, Queue wait: 0.000, Push: 4.087, Total loop: 219.209
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.479, Text: 0.726, Imshow: 0.938, WaitKey: 601.016, Total loop: 604.179
+Read timings (ms) - Read: 218.198, Queue wait: 0.000, Push: 1.664, Total loop: 219.868
+Read timings (ms) - Read: 217.294, Queue wait: 0.000, Push: 3.915, Total loop: 221.214
+Read timings (ms) - Read: 215.505, Queue wait: 0.000, Push: 3.912, Total loop: 219.422
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.627, Text: 0.726, Imshow: 1.020, WaitKey: 662.424, Total loop: 665.817
+Read timings (ms) - Read: 217.636, Queue wait: 0.000, Push: 1.662, Total loop: 219.302
+Read timings (ms) - Read: 217.706, Queue wait: 0.000, Push: 3.902, Total loop: 221.613
+Read timings (ms) - Read: 215.497, Queue wait: 0.000, Push: 4.032, Total loop: 219.534
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.404, Text: 0.782, Imshow: 1.228, WaitKey: 601.207, Total loop: 604.640
+Read timings (ms) - Read: 217.290, Queue wait: 0.000, Push: 1.689, Total loop: 218.984
+Read timings (ms) - Read: 217.589, Queue wait: 0.000, Push: 3.922, Total loop: 221.516
+Read timings (ms) - Read: 215.299, Queue wait: 0.000, Push: 3.791, Total loop: 219.095
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.416, Text: 0.727, Imshow: 1.192, WaitKey: 662.333, Total loop: 665.687
+Read timings (ms) - Read: 217.427, Queue wait: 0.000, Push: 1.647, Total loop: 219.079
+Read timings (ms) - Read: 217.540, Queue wait: 0.000, Push: 4.160, Total loop: 221.705
+Read timings (ms) - Read: 215.299, Queue wait: 0.000, Push: 3.947, Total loop: 219.251
+Display timings (ms) - Queue wait: 0.001, Pop: 0.006, Clone: 1.550, Text: 0.724, Imshow: 1.021, WaitKey: 668.956, Total loop: 672.268
+Read timings (ms) - Read: 217.920, Queue wait: 0.000, Push: 1.871, Total loop: 219.796
+Read timings (ms) - Read: 217.303, Queue wait: 0.000, Push: 3.964, Total loop: 221.273
+Read timings (ms) - Read: 215.385, Queue wait: 0.000, Push: 3.942, Total loop: 219.332
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.416, Text: 0.726, Imshow: 1.486, WaitKey: 653.772, Total loop: 657.418
+Read timings (ms) - Read: 217.999, Queue wait: 0.000, Push: 1.604, Total loop: 219.608
+Read timings (ms) - Read: 217.599, Queue wait: 0.000, Push: 4.009, Total loop: 221.613
+Read timings (ms) - Read: 215.357, Queue wait: 0.000, Push: 3.955, Total loop: 219.317
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.799, Text: 0.728, Imshow: 1.025, WaitKey: 658.648, Total loop: 662.219
+Read timings (ms) - Read: 217.734, Queue wait: 0.000, Push: 1.819, Total loop: 219.558
+Read timings (ms) - Read: 217.402, Queue wait: 0.000, Push: 4.002, Total loop: 221.409
+Read timings (ms) - Read: 215.426, Queue wait: 0.000, Push: 3.696, Total loop: 219.158
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.470, Text: 0.724, Imshow: 1.156, WaitKey: 663.266, Total loop: 666.634
+Read timings (ms) - Read: 217.717, Queue wait: 0.000, Push: 1.640, Total loop: 219.362
+Read timings (ms) - Read: 217.571, Queue wait: 0.000, Push: 3.897, Total loop: 221.472
+Read timings (ms) - Read: 215.440, Queue wait: 0.000, Push: 3.995, Total loop: 219.440
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.491, Text: 0.727, Imshow: 1.043, WaitKey: 664.395, Total loop: 667.675
+Read timings (ms) - Read: 217.167, Queue wait: 0.000, Push: 1.690, Total loop: 218.862
+Read timings (ms) - Read: 217.339, Queue wait: 0.000, Push: 3.917, Total loop: 221.262
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.446, Text: 0.728, Imshow: 1.019, WaitKey: 649.042, Total loop: 652.253
+Read timings (ms) - Read: 215.345, Queue wait: 59.437, Push: 1.681, Total loop: 276.470
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.478, Text: 0.728, Imshow: 1.084, WaitKey: 1883.494, Total loop: 1886.803
+Read timings (ms) - Read: 160.278, Queue wait: 1722.534, Push: 1.222, Total loop: 1884.039
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.566, Text: 0.711, Imshow: 0.934, WaitKey: 68.260, Total loop: 71.490
+Read timings (ms) - Read: 1.452, Queue wait: 60.418, Push: 1.320, Total loop: 63.195
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.378, Text: 3.659, Imshow: 1.064, WaitKey: 644.012, Total loop: 650.131
+Read timings (ms) - Read: 1.379, Queue wait: 654.327, Push: 1.399, Total loop: 657.111
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.265, Text: 0.710, Imshow: 0.960, WaitKey: 644.002, Total loop: 646.956
+Read timings (ms) - Read: 1.513, Queue wait: 643.971, Push: 1.624, Total loop: 647.113
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.378, Text: 0.728, Imshow: 0.836, WaitKey: 631.837, Total loop: 634.797
+Read timings (ms) - Read: 1.451, Queue wait: 623.817, Push: 1.692, Total loop: 626.964
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 2.761, Text: 0.728, Imshow: 6.101, WaitKey: 653.907, Total loop: 663.515
+Read timings (ms) - Read: 1.662, Queue wait: 664.093, Push: 1.385, Total loop: 667.147
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.607, Text: 0.779, Imshow: 4.583, WaitKey: 631.802, Total loop: 638.790
+Read timings (ms) - Read: 1.900, Queue wait: 633.922, Push: 1.815, Total loop: 637.643
+Display timings (ms) - Queue wait: 0.001, Pop: 0.009, Clone: 1.286, Text: 0.724, Imshow: 1.583, WaitKey: 643.668, Total loop: 647.280
+Read timings (ms) - Read: 1.825, Queue wait: 643.924, Push: 1.668, Total loop: 647.422
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.277, Text: 0.724, Imshow: 0.901, WaitKey: 636.291, Total loop: 639.211
+Read timings (ms) - Read: 1.787, Queue wait: 634.997, Push: 1.735, Total loop: 638.525
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.375, Text: 0.730, Imshow: 1.218, WaitKey: 631.643, Total loop: 634.984
+Read timings (ms) - Read: 1.814, Queue wait: 634.048, Push: 1.779, Total loop: 637.647
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.349, Text: 0.724, Imshow: 1.144, WaitKey: 630.379, Total loop: 633.615
+Read timings (ms) - Read: 1.965, Queue wait: 634.122, Push: 1.685, Total loop: 637.779
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.288, Text: 0.723, Imshow: 1.119, WaitKey: 649.940, Total loop: 653.090
+Read timings (ms) - Read: 1.971, Queue wait: 644.166, Push: 1.660, Total loop: 647.802
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.272, Text: 0.726, Imshow: 1.156, WaitKey: 645.723, Total loop: 648.895
+Read timings (ms) - Read: 1.946, Queue wait: 644.136, Push: 1.597, Total loop: 647.685
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.317, Text: 0.724, Imshow: 1.101, WaitKey: 642.612, Total loop: 645.773
+Read timings (ms) - Read: 2.017, Queue wait: 644.202, Push: 1.996, Total loop: 648.220
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.450, Text: 0.725, Imshow: 1.115, WaitKey: 637.945, Total loop: 641.254
+Read timings (ms) - Read: 1.919, Queue wait: 634.131, Push: 1.820, Total loop: 637.877
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.578, Text: 0.775, Imshow: 1.238, WaitKey: 645.738, Total loop: 649.348
+Read timings (ms) - Read: 1.906, Queue wait: 644.180, Push: 1.425, Total loop: 647.516
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.574, Text: 0.734, Imshow: 1.262, WaitKey: 642.259, Total loop: 645.849
+Read timings (ms) - Read: 2.097, Queue wait: 644.194, Push: 1.957, Total loop: 648.254
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.276, Text: 0.724, Imshow: 1.132, WaitKey: 635.796, Total loop: 638.948
+Read timings (ms) - Read: 1.877, Queue wait: 634.047, Push: 1.744, Total loop: 637.673
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.269, Text: 0.727, Imshow: 1.049, WaitKey: 636.967, Total loop: 640.031
+Read timings (ms) - Read: 1.931, Queue wait: 644.190, Push: 1.964, Total loop: 648.091
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.278, Text: 0.723, Imshow: 0.954, WaitKey: 655.905, Total loop: 658.878
+Read timings (ms) - Read: 1.982, Queue wait: 654.239, Push: 1.808, Total loop: 658.035
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.408, Text: 0.727, Imshow: 0.831, WaitKey: 633.093, Total loop: 636.078
+Read timings (ms) - Read: 1.820, Queue wait: 624.014, Push: 2.108, Total loop: 627.946
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 2.164, Text: 0.733, Imshow: 1.075, WaitKey: 643.774, Total loop: 647.765
+Read timings (ms) - Read: 2.049, Queue wait: 644.250, Push: 1.548, Total loop: 647.851
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.805, Text: 0.734, Imshow: 1.093, WaitKey: 645.325, Total loop: 648.976
+Read timings (ms) - Read: 2.319, Queue wait: 654.083, Push: 1.781, Total loop: 658.189
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.322, Text: 0.723, Imshow: 0.909, WaitKey: 635.421, Total loop: 638.393
+Read timings (ms) - Read: 1.959, Queue wait: 633.915, Push: 1.707, Total loop: 637.588
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.334, Text: 0.724, Imshow: 0.833, WaitKey: 632.115, Total loop: 635.025
+Read timings (ms) - Read: 2.000, Queue wait: 623.867, Push: 1.807, Total loop: 627.679
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.286, Text: 0.804, Imshow: 1.055, WaitKey: 632.121, Total loop: 635.284
+Read timings (ms) - Read: 1.830, Queue wait: 633.938, Push: 1.548, Total loop: 637.321
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.270, Text: 0.723, Imshow: 0.896, WaitKey: 644.276, Total loop: 647.183
+Read timings (ms) - Read: 1.832, Queue wait: 645.575, Push: 2.058, Total loop: 649.470
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.390, Text: 0.722, Imshow: 0.807, WaitKey: 629.941, Total loop: 632.879
+Read timings (ms) - Read: 1.799, Queue wait: 623.890, Push: 1.712, Total loop: 627.406
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.664, Text: 0.769, Imshow: 6.674, WaitKey: 644.276, Total loop: 653.402
+Read timings (ms) - Read: 1.644, Queue wait: 654.072, Push: 1.683, Total loop: 657.403
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.606, Text: 0.726, Imshow: 1.051, WaitKey: 642.084, Total loop: 645.485
+Read timings (ms) - Read: 1.793, Queue wait: 644.015, Push: 1.361, Total loop: 647.176
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.352, Text: 0.722, Imshow: 1.058, WaitKey: 632.878, Total loop: 636.031
+Read timings (ms) - Read: 1.699, Queue wait: 633.913, Push: 1.234, Total loop: 636.851
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.309, Text: 0.726, Imshow: 5.149, WaitKey: 641.516, Total loop: 648.718
+Read timings (ms) - Read: 1.815, Queue wait: 644.043, Push: 1.842, Total loop: 647.705
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.615, Text: 0.775, Imshow: 1.027, WaitKey: 644.793, Total loop: 648.229
+Read timings (ms) - Read: 1.778, Queue wait: 643.977, Push: 1.249, Total loop: 647.010
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.281, Text: 0.774, Imshow: 6.708, WaitKey: 644.836, Total loop: 653.618
+Read timings (ms) - Read: 1.360, Queue wait: 654.071, Push: 1.350, Total loop: 656.786
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.278, Text: 0.723, Imshow: 2.420, WaitKey: 610.252, Total loop: 614.691
+Read timings (ms) - Read: 1.335, Queue wait: 603.749, Push: 1.778, Total loop: 606.866
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.816, Text: 0.733, Imshow: 1.181, WaitKey: 647.008, Total loop: 650.757
+Read timings (ms) - Read: 1.944, Queue wait: 654.080, Push: 1.849, Total loop: 657.877
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.514, Text: 0.774, Imshow: 0.891, WaitKey: 638.254, Total loop: 641.452
+Read timings (ms) - Read: 1.930, Queue wait: 633.925, Push: 1.800, Total loop: 637.662
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.972, Text: 0.728, Imshow: 0.882, WaitKey: 593.400, Total loop: 596.999
+Read timings (ms) - Read: 1.888, Queue wait: 593.670, Push: 1.598, Total loop: 597.161
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.532, Text: 0.725, Imshow: 0.875, WaitKey: 636.368, Total loop: 639.520
+Read timings (ms) - Read: 1.780, Queue wait: 633.928, Push: 1.767, Total loop: 637.482
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.300, Text: 0.727, Imshow: 1.045, WaitKey: 635.008, Total loop: 638.099
+Read timings (ms) - Read: 1.829, Queue wait: 633.883, Push: 1.438, Total loop: 637.156
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.559, Text: 0.768, Imshow: 1.035, WaitKey: 632.685, Total loop: 636.066
+Read timings (ms) - Read: 2.052, Queue wait: 633.920, Push: 1.863, Total loop: 637.840
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.280, Text: 0.764, Imshow: 0.965, WaitKey: 598.793, Total loop: 601.821
+Read timings (ms) - Read: 1.799, Queue wait: 603.735, Push: 1.657, Total loop: 607.198
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.302, Text: 0.723, Imshow: 0.878, WaitKey: 632.991, Total loop: 635.912
+Read timings (ms) - Read: 1.923, Queue wait: 633.902, Push: 1.752, Total loop: 637.583
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.292, Text: 0.725, Imshow: 0.871, WaitKey: 631.415, Total loop: 634.321
+Read timings (ms) - Read: 2.091, Queue wait: 623.816, Push: 1.680, Total loop: 627.593
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.322, Text: 0.726, Imshow: 0.963, WaitKey: 631.074, Total loop: 634.104
+Read timings (ms) - Read: 1.815, Queue wait: 633.925, Push: 2.058, Total loop: 637.804
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.580, Text: 0.723, Imshow: 0.929, WaitKey: 634.524, Total loop: 637.775
+Read timings (ms) - Read: 1.800, Queue wait: 633.928, Push: 1.830, Total loop: 637.565
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.656, Text: 0.726, Imshow: 0.816, WaitKey: 649.708, Total loop: 652.925
+Read timings (ms) - Read: 1.919, Queue wait: 644.021, Push: 1.561, Total loop: 647.508
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.503, Text: 0.729, Imshow: 1.036, WaitKey: 643.939, Total loop: 647.225
+Read timings (ms) - Read: 1.898, Queue wait: 643.957, Push: 1.905, Total loop: 647.766
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.314, Text: 0.728, Imshow: 1.098, WaitKey: 630.070, Total loop: 633.229
+Read timings (ms) - Read: 1.826, Queue wait: 633.925, Push: 1.816, Total loop: 637.573
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.302, Text: 0.724, Imshow: 0.869, WaitKey: 635.277, Total loop: 638.189
+Read timings (ms) - Read: 1.867, Queue wait: 633.895, Push: 1.442, Total loop: 637.209
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.334, Text: 0.726, Imshow: 0.848, WaitKey: 694.383, Total loop: 697.309
+Read timings (ms) - Read: 1.305, Queue wait: 694.269, Push: 1.758, Total loop: 697.337
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.532, Text: 0.723, Imshow: 0.893, WaitKey: 645.049, Total loop: 648.216
+Read timings (ms) - Read: 1.834, Queue wait: 643.959, Push: 1.695, Total loop: 647.493
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.562, Text: 0.726, Imshow: 0.837, WaitKey: 648.679, Total loop: 651.823
+Read timings (ms) - Read: 1.930, Queue wait: 643.976, Push: 1.818, Total loop: 647.728
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.876, Text: 0.731, Imshow: 1.083, WaitKey: 642.674, Total loop: 646.384
+Read timings (ms) - Read: 2.042, Queue wait: 644.024, Push: 1.730, Total loop: 647.800
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.357, Text: 0.727, Imshow: 1.034, WaitKey: 632.460, Total loop: 635.597
+Read timings (ms) - Read: 1.842, Queue wait: 633.932, Push: 1.583, Total loop: 637.362
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.330, Text: 0.725, Imshow: 0.879, WaitKey: 635.809, Total loop: 638.761
+Read timings (ms) - Read: 1.863, Queue wait: 633.922, Push: 1.951, Total loop: 637.742
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.309, Text: 0.722, Imshow: 1.038, WaitKey: 636.503, Total loop: 639.591
+Read timings (ms) - Read: 1.736, Queue wait: 633.919, Push: 1.584, Total loop: 637.244
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.649, Text: 0.732, Imshow: 1.134, WaitKey: 644.138, Total loop: 647.672
+Read timings (ms) - Read: 2.046, Queue wait: 643.950, Push: 1.619, Total loop: 647.619
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.645, Text: 0.733, Imshow: 1.108, WaitKey: 643.579, Total loop: 647.084
+Read timings (ms) - Read: 2.037, Queue wait: 643.946, Push: 1.892, Total loop: 647.879
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.990, Text: 0.733, Imshow: 1.106, WaitKey: 632.543, Total loop: 636.391
+Read timings (ms) - Read: 2.242, Queue wait: 633.907, Push: 2.044, Total loop: 638.199
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.600, Text: 0.726, Imshow: 1.087, WaitKey: 641.056, Total loop: 644.487
+Read timings (ms) - Read: 1.836, Queue wait: 643.950, Push: 1.691, Total loop: 647.484
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.286, Text: 0.723, Imshow: 0.957, WaitKey: 633.600, Total loop: 636.585
+Read timings (ms) - Read: 1.990, Queue wait: 633.864, Push: 1.668, Total loop: 637.528
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.439, Text: 0.820, Imshow: 0.876, WaitKey: 645.361, Total loop: 648.515
+Read timings (ms) - Read: 1.974, Queue wait: 643.943, Push: 1.824, Total loop: 647.748
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.647, Text: 0.727, Imshow: 0.838, WaitKey: 645.267, Total loop: 648.497
+Read timings (ms) - Read: 2.012, Queue wait: 643.932, Push: 1.623, Total loop: 647.573
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.331, Text: 0.726, Imshow: 0.815, WaitKey: 646.948, Total loop: 649.838
+Read timings (ms) - Read: 2.011, Queue wait: 644.031, Push: 1.571, Total loop: 647.619
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.284, Text: 0.724, Imshow: 0.853, WaitKey: 633.704, Total loop: 636.582
+Read timings (ms) - Read: 1.911, Queue wait: 633.875, Push: 1.776, Total loop: 637.567
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.474, Text: 0.776, Imshow: 0.820, WaitKey: 644.807, Total loop: 647.897
+Read timings (ms) - Read: 1.989, Queue wait: 643.942, Push: 1.755, Total loop: 647.690
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.370, Text: 0.772, Imshow: 0.812, WaitKey: 645.765, Total loop: 648.738
+Read timings (ms) - Read: 2.023, Queue wait: 644.697, Push: 1.784, Total loop: 648.508
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.641, Text: 0.727, Imshow: 0.832, WaitKey: 649.414, Total loop: 652.632
+Read timings (ms) - Read: 1.951, Queue wait: 654.023, Push: 1.740, Total loop: 657.721
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.556, Text: 0.726, Imshow: 0.845, WaitKey: 641.161, Total loop: 644.307
+Read timings (ms) - Read: 2.042, Queue wait: 633.873, Push: 2.256, Total loop: 638.176
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.398, Text: 0.726, Imshow: 0.856, WaitKey: 602.165, Total loop: 605.164
+Read timings (ms) - Read: 1.920, Queue wait: 603.700, Push: 1.610, Total loop: 607.236
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.279, Text: 0.723, Imshow: 0.955, WaitKey: 638.802, Total loop: 641.777
+Read timings (ms) - Read: 1.950, Queue wait: 633.861, Push: 1.736, Total loop: 637.551
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.731, Text: 0.795, Imshow: 0.942, WaitKey: 643.495, Total loop: 646.983
+Read timings (ms) - Read: 2.631, Queue wait: 643.974, Push: 2.141, Total loop: 648.752
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.627, Text: 0.774, Imshow: 0.870, WaitKey: 649.378, Total loop: 652.670
+Read timings (ms) - Read: 1.950, Queue wait: 654.018, Push: 1.728, Total loop: 657.702
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.330, Text: 0.726, Imshow: 0.818, WaitKey: 644.676, Total loop: 647.569
+Read timings (ms) - Read: 1.976, Queue wait: 643.963, Push: 1.955, Total loop: 647.901
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.304, Text: 0.773, Imshow: 0.813, WaitKey: 595.077, Total loop: 597.986
+Read timings (ms) - Read: 1.966, Queue wait: 593.657, Push: 2.074, Total loop: 597.705
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.303, Text: 0.726, Imshow: 0.809, WaitKey: 642.779, Total loop: 645.637
+Read timings (ms) - Read: 2.008, Queue wait: 643.963, Push: 1.883, Total loop: 647.861
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.647, Text: 0.725, Imshow: 0.874, WaitKey: 645.516, Total loop: 648.781
+Read timings (ms) - Read: 2.030, Queue wait: 643.972, Push: 1.705, Total loop: 647.713
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.574, Text: 0.727, Imshow: 0.836, WaitKey: 647.295, Total loop: 650.452
+Read timings (ms) - Read: 2.050, Queue wait: 643.951, Push: 1.908, Total loop: 647.915
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.285, Text: 0.724, Imshow: 0.858, WaitKey: 646.490, Total loop: 649.377
+Read timings (ms) - Read: 1.988, Queue wait: 643.935, Push: 1.719, Total loop: 647.648
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.330, Text: 0.727, Imshow: 0.820, WaitKey: 641.004, Total loop: 643.899
+Read timings (ms) - Read: 1.922, Queue wait: 643.971, Push: 2.058, Total loop: 647.959
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.338, Text: 0.726, Imshow: 0.917, WaitKey: 635.030, Total loop: 638.030
+Read timings (ms) - Read: 1.994, Queue wait: 633.901, Push: 1.814, Total loop: 637.715
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.541, Text: 0.722, Imshow: 0.831, WaitKey: 649.081, Total loop: 652.194
+Read timings (ms) - Read: 2.035, Queue wait: 643.942, Push: 1.729, Total loop: 647.711
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.558, Text: 0.765, Imshow: 0.835, WaitKey: 635.221, Total loop: 638.398
+Read timings (ms) - Read: 1.961, Queue wait: 634.293, Push: 1.606, Total loop: 637.866
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.602, Text: 0.725, Imshow: 0.815, WaitKey: 635.427, Total loop: 638.588
+Read timings (ms) - Read: 1.914, Queue wait: 633.867, Push: 2.382, Total loop: 638.169
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.399, Text: 0.726, Imshow: 0.902, WaitKey: 642.019, Total loop: 645.065
+Read timings (ms) - Read: 1.984, Queue wait: 643.957, Push: 1.656, Total loop: 647.603
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.286, Text: 0.725, Imshow: 0.805, WaitKey: 646.494, Total loop: 649.328
+Read timings (ms) - Read: 1.971, Queue wait: 643.976, Push: 1.587, Total loop: 647.540
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.345, Text: 0.725, Imshow: 0.853, WaitKey: 643.746, Total loop: 646.687
+Read timings (ms) - Read: 1.950, Queue wait: 643.940, Push: 1.619, Total loop: 647.513
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.281, Text: 0.725, Imshow: 0.855, WaitKey: 646.192, Total loop: 649.072
+Read timings (ms) - Read: 2.039, Queue wait: 643.952, Push: 1.758, Total loop: 647.754
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.431, Text: 0.723, Imshow: 0.844, WaitKey: 644.910, Total loop: 647.927
+Read timings (ms) - Read: 1.981, Queue wait: 644.136, Push: 1.737, Total loop: 647.860
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.565, Text: 0.724, Imshow: 0.863, WaitKey: 648.998, Total loop: 652.168
+Read timings (ms) - Read: 1.940, Queue wait: 654.030, Push: 1.846, Total loop: 657.823
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.603, Text: 0.769, Imshow: 0.801, WaitKey: 645.244, Total loop: 648.436
+Read timings (ms) - Read: 2.038, Queue wait: 643.960, Push: 1.713, Total loop: 647.718
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.286, Text: 0.771, Imshow: 0.812, WaitKey: 648.556, Total loop: 651.444
+Read timings (ms) - Read: 1.955, Queue wait: 643.945, Push: 1.691, Total loop: 647.597
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.446, Text: 0.772, Imshow: 0.815, WaitKey: 647.877, Total loop: 650.929
+Read timings (ms) - Read: 1.915, Queue wait: 643.975, Push: 2.355, Total loop: 648.252
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.757, Text: 0.757, Imshow: 0.903, WaitKey: 649.214, Total loop: 652.650
+Read timings (ms) - Read: 1.934, Queue wait: 654.023, Push: 1.666, Total loop: 657.630
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.325, Text: 0.727, Imshow: 0.860, WaitKey: 648.321, Total loop: 651.253
+Read timings (ms) - Read: 1.976, Queue wait: 643.930, Push: 1.631, Total loop: 647.543
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.286, Text: 0.726, Imshow: 0.828, WaitKey: 645.191, Total loop: 648.051
+Read timings (ms) - Read: 1.947, Queue wait: 644.229, Push: 1.688, Total loop: 647.870
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.482, Text: 0.725, Imshow: 0.868, WaitKey: 634.530, Total loop: 637.623
+Read timings (ms) - Read: 2.016, Queue wait: 633.884, Push: 1.732, Total loop: 637.637
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.410, Text: 0.726, Imshow: 0.795, WaitKey: 644.734, Total loop: 647.683
+Read timings (ms) - Read: 1.910, Queue wait: 644.021, Push: 1.781, Total loop: 647.716
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.653, Text: 0.725, Imshow: 0.818, WaitKey: 646.677, Total loop: 649.891
+Read timings (ms) - Read: 1.965, Queue wait: 643.962, Push: 2.215, Total loop: 648.147
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.602, Text: 0.733, Imshow: 0.852, WaitKey: 647.782, Total loop: 650.986
+Read timings (ms) - Read: 1.931, Queue wait: 654.021, Push: 1.679, Total loop: 657.637
+Display timings (ms) - Queue wait: 0.001, Pop: 0.009, Clone: 1.411, Text: 0.726, Imshow: 0.800, WaitKey: 646.192, Total loop: 649.149
+Read timings (ms) - Read: 2.037, Queue wait: 643.917, Push: 1.694, Total loop: 647.655
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.284, Text: 0.724, Imshow: 0.826, WaitKey: 645.037, Total loop: 647.890
+Read timings (ms) - Read: 1.919, Queue wait: 644.000, Push: 2.024, Total loop: 647.951
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.277, Text: 0.726, Imshow: 0.809, WaitKey: 649.096, Total loop: 651.927
+Read timings (ms) - Read: 2.020, Queue wait: 644.326, Push: 1.581, Total loop: 647.932
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.585, Text: 0.723, Imshow: 0.855, WaitKey: 638.249, Total loop: 641.430
+Read timings (ms) - Read: 1.917, Queue wait: 643.975, Push: 1.783, Total loop: 647.682
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.283, Text: 0.769, Imshow: 0.798, WaitKey: 644.552, Total loop: 647.421
+Read timings (ms) - Read: 2.083, Queue wait: 643.973, Push: 1.924, Total loop: 647.987
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.282, Text: 0.807, Imshow: 0.884, WaitKey: 644.542, Total loop: 647.535
+Read timings (ms) - Read: 2.171, Queue wait: 633.840, Push: 1.714, Total loop: 637.731
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.791, Text: 0.762, Imshow: 0.979, WaitKey: 642.034, Total loop: 645.585
+Read timings (ms) - Read: 2.667, Queue wait: 644.174, Push: 1.671, Total loop: 648.517
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.633, Text: 0.726, Imshow: 0.823, WaitKey: 635.133, Total loop: 638.334
+Read timings (ms) - Read: 1.912, Queue wait: 634.550, Push: 1.580, Total loop: 638.047
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.456, Text: 0.773, Imshow: 0.819, WaitKey: 643.571, Total loop: 646.637
+Read timings (ms) - Read: 2.088, Queue wait: 643.950, Push: 1.784, Total loop: 647.826
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.285, Text: 0.724, Imshow: 0.817, WaitKey: 648.721, Total loop: 651.565
+Read timings (ms) - Read: 1.972, Queue wait: 643.918, Push: 1.673, Total loop: 647.568
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.709, Text: 0.731, Imshow: 0.901, WaitKey: 651.441, Total loop: 654.802
+Read timings (ms) - Read: 2.670, Queue wait: 654.019, Push: 1.930, Total loop: 658.625
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.314, Text: 0.727, Imshow: 0.808, WaitKey: 643.776, Total loop: 646.644
+Read timings (ms) - Read: 1.985, Queue wait: 643.962, Push: 1.855, Total loop: 647.809
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.528, Text: 0.768, Imshow: 0.812, WaitKey: 1129.480, Total loop: 1132.609
+Read timings (ms) - Read: 1.931, Queue wait: 1126.852, Push: 1.378, Total loop: 1130.166
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.583, Text: 0.724, Imshow: 0.825, WaitKey: 705.622, Total loop: 708.773
+Read timings (ms) - Read: 1.518, Queue wait: 704.331, Push: 2.145, Total loop: 708.000
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.991, Text: 0.731, Imshow: 0.853, WaitKey: 645.728, Total loop: 649.322
+Read timings (ms) - Read: 2.003, Queue wait: 643.941, Push: 1.548, Total loop: 647.497
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.683, Text: 0.734, Imshow: 0.926, WaitKey: 650.066, Total loop: 653.428
+Read timings (ms) - Read: 2.675, Queue wait: 654.002, Push: 1.744, Total loop: 658.428
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.287, Text: 0.769, Imshow: 0.791, WaitKey: 643.599, Total loop: 646.466
+Read timings (ms) - Read: 1.925, Queue wait: 643.975, Push: 1.856, Total loop: 647.763
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.354, Text: 0.726, Imshow: 0.848, WaitKey: 645.736, Total loop: 648.682
+Read timings (ms) - Read: 2.008, Queue wait: 643.949, Push: 1.688, Total loop: 647.653
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.281, Text: 0.740, Imshow: 0.855, WaitKey: 680.481, Total loop: 683.377
+Read timings (ms) - Read: 1.935, Queue wait: 674.896, Push: 1.493, Total loop: 678.330
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.471, Text: 0.814, Imshow: 1.069, WaitKey: 619.695, Total loop: 623.067
+Read timings (ms) - Read: 2.049, Queue wait: 623.836, Push: 1.508, Total loop: 627.398
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.539, Text: 0.725, Imshow: 1.786, WaitKey: 652.047, Total loop: 656.116
+Read timings (ms) - Read: 1.958, Queue wait: 654.051, Push: 1.472, Total loop: 657.487
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.647, Text: 0.727, Imshow: 1.403, WaitKey: 660.627, Total loop: 664.422
+Read timings (ms) - Read: 1.437, Queue wait: 664.095, Push: 1.482, Total loop: 667.019
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.270, Text: 0.725, Imshow: 0.903, WaitKey: 651.581, Total loop: 654.497
+Read timings (ms) - Read: 1.731, Queue wait: 643.966, Push: 1.914, Total loop: 647.616
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.440, Text: 0.727, Imshow: 1.214, WaitKey: 648.544, Total loop: 651.944
+Read timings (ms) - Read: 1.776, Queue wait: 654.066, Push: 1.871, Total loop: 657.720
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.596, Text: 0.726, Imshow: 0.984, WaitKey: 647.487, Total loop: 650.810
+Read timings (ms) - Read: 1.819, Queue wait: 643.947, Push: 1.648, Total loop: 647.420
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.315, Text: 0.725, Imshow: 1.077, WaitKey: 652.824, Total loop: 655.960
+Read timings (ms) - Read: 1.772, Queue wait: 658.325, Push: 1.667, Total loop: 661.770
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.313, Text: 0.725, Imshow: 3.555, WaitKey: 658.365, Total loop: 663.976
+Read timings (ms) - Read: 1.949, Queue wait: 654.354, Push: 1.940, Total loop: 658.248
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.488, Text: 0.726, Imshow: 0.829, WaitKey: 657.106, Total loop: 660.167
+Read timings (ms) - Read: 1.906, Queue wait: 654.386, Push: 1.722, Total loop: 658.021
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.386, Text: 0.723, Imshow: 0.846, WaitKey: 650.000, Total loop: 652.973
+Read timings (ms) - Read: 1.893, Queue wait: 654.286, Push: 1.986, Total loop: 658.171
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.584, Text: 0.723, Imshow: 0.892, WaitKey: 650.145, Total loop: 653.363
+Read timings (ms) - Read: 1.986, Queue wait: 644.171, Push: 1.811, Total loop: 647.974
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.501, Text: 0.763, Imshow: 0.949, WaitKey: 647.016, Total loop: 650.247
+Read timings (ms) - Read: 1.961, Queue wait: 644.123, Push: 1.509, Total loop: 647.597
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.556, Text: 0.783, Imshow: 1.057, WaitKey: 646.250, Total loop: 649.666
+Read timings (ms) - Read: 2.062, Queue wait: 654.294, Push: 1.723, Total loop: 658.084
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.269, Text: 0.770, Imshow: 0.887, WaitKey: 661.402, Total loop: 664.346
+Read timings (ms) - Read: 2.031, Queue wait: 654.192, Push: 1.981, Total loop: 658.210
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.267, Text: 0.768, Imshow: 1.008, WaitKey: 646.774, Total loop: 649.837
+Read timings (ms) - Read: 1.902, Queue wait: 644.124, Push: 1.535, Total loop: 647.567
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.624, Text: 0.730, Imshow: 1.071, WaitKey: 644.158, Total loop: 647.602
+Read timings (ms) - Read: 2.102, Queue wait: 644.198, Push: 1.402, Total loop: 647.706
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.448, Text: 0.732, Imshow: 6.688, WaitKey: 604.329, Total loop: 613.214
+Read timings (ms) - Read: 1.631, Queue wait: 613.966, Push: 1.332, Total loop: 616.934
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.270, Text: 0.724, Imshow: 6.773, WaitKey: 648.887, Total loop: 657.671
+Read timings (ms) - Read: 1.450, Queue wait: 655.214, Push: 1.948, Total loop: 658.617
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.311, Text: 0.726, Imshow: 3.384, WaitKey: 663.135, Total loop: 668.574
+Read timings (ms) - Read: 1.726, Queue wait: 664.098, Push: 1.864, Total loop: 667.694
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.604, Text: 0.725, Imshow: 2.453, WaitKey: 646.757, Total loop: 651.558
+Read timings (ms) - Read: 1.791, Queue wait: 643.951, Push: 1.989, Total loop: 647.736
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.898, Text: 0.733, Imshow: 1.034, WaitKey: 646.048, Total loop: 649.731
+Read timings (ms) - Read: 1.887, Queue wait: 654.092, Push: 1.872, Total loop: 657.855
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.287, Text: 0.722, Imshow: 0.933, WaitKey: 615.987, Total loop: 618.949
+Read timings (ms) - Read: 1.962, Queue wait: 613.837, Push: 1.771, Total loop: 617.577
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.291, Text: 0.720, Imshow: 0.794, WaitKey: 650.505, Total loop: 653.329
+Read timings (ms) - Read: 1.875, Queue wait: 643.981, Push: 1.927, Total loop: 647.788
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.287, Text: 0.728, Imshow: 1.126, WaitKey: 623.096, Total loop: 626.255
+Read timings (ms) - Read: 1.748, Queue wait: 623.832, Push: 1.808, Total loop: 627.395
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.518, Text: 0.724, Imshow: 0.945, WaitKey: 614.780, Total loop: 617.985
+Read timings (ms) - Read: 1.723, Queue wait: 613.794, Push: 1.891, Total loop: 617.414
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.560, Text: 0.915, Imshow: 1.114, WaitKey: 642.090, Total loop: 645.698
+Read timings (ms) - Read: 1.883, Queue wait: 643.977, Push: 1.532, Total loop: 647.397
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.627, Text: 0.724, Imshow: 0.898, WaitKey: 649.892, Total loop: 653.160
+Read timings (ms) - Read: 1.808, Queue wait: 654.079, Push: 1.667, Total loop: 657.561
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.315, Text: 0.724, Imshow: 0.917, WaitKey: 648.554, Total loop: 651.528
+Read timings (ms) - Read: 1.913, Queue wait: 643.984, Push: 1.618, Total loop: 647.522
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.291, Text: 0.723, Imshow: 0.801, WaitKey: 648.156, Total loop: 650.990
+Read timings (ms) - Read: 1.919, Queue wait: 643.987, Push: 1.387, Total loop: 647.300
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.427, Text: 0.731, Imshow: 1.011, WaitKey: 650.155, Total loop: 653.344
+Read timings (ms) - Read: 1.979, Queue wait: 654.031, Push: 1.684, Total loop: 657.701
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.283, Text: 0.726, Imshow: 0.874, WaitKey: 642.760, Total loop: 645.661
+Read timings (ms) - Read: 1.795, Queue wait: 644.086, Push: 2.072, Total loop: 647.960
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.458, Text: 0.725, Imshow: 0.942, WaitKey: 647.546, Total loop: 650.690
+Read timings (ms) - Read: 1.892, Queue wait: 643.971, Push: 1.824, Total loop: 647.692
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.563, Text: 0.768, Imshow: 0.789, WaitKey: 649.922, Total loop: 653.061
+Read timings (ms) - Read: 1.783, Queue wait: 654.073, Push: 1.791, Total loop: 657.653
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.625, Text: 0.726, Imshow: 0.822, WaitKey: 647.148, Total loop: 650.340
+Read timings (ms) - Read: 1.976, Queue wait: 643.996, Push: 1.668, Total loop: 647.646
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.285, Text: 0.723, Imshow: 0.856, WaitKey: 647.801, Total loop: 650.684
+Read timings (ms) - Read: 1.877, Queue wait: 643.969, Push: 1.639, Total loop: 647.492
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.444, Text: 0.739, Imshow: 0.824, WaitKey: 644.481, Total loop: 647.507
+Read timings (ms) - Read: 1.796, Queue wait: 643.986, Push: 1.744, Total loop: 647.531
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.610, Text: 0.721, Imshow: 0.831, WaitKey: 654.640, Total loop: 657.821
+Read timings (ms) - Read: 1.783, Queue wait: 654.026, Push: 1.576, Total loop: 657.392
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.297, Text: 0.823, Imshow: 0.869, WaitKey: 639.395, Total loop: 642.403
+Read timings (ms) - Read: 1.912, Queue wait: 643.994, Push: 1.673, Total loop: 647.586
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.297, Text: 0.727, Imshow: 0.888, WaitKey: 656.015, Total loop: 658.947
+Read timings (ms) - Read: 1.899, Queue wait: 654.031, Push: 1.977, Total loop: 657.913
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.497, Text: 0.726, Imshow: 0.874, WaitKey: 640.168, Total loop: 643.285
+Read timings (ms) - Read: 1.799, Queue wait: 633.904, Push: 1.769, Total loop: 637.478
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.565, Text: 0.741, Imshow: 1.013, WaitKey: 644.598, Total loop: 647.935
+Read timings (ms) - Read: 1.826, Queue wait: 643.975, Push: 1.619, Total loop: 647.427
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.747, Text: 0.739, Imshow: 1.222, WaitKey: 646.647, Total loop: 650.373
+Read timings (ms) - Read: 2.000, Queue wait: 654.088, Push: 1.716, Total loop: 657.811
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.534, Text: 0.725, Imshow: 0.978, WaitKey: 651.483, Total loop: 654.739
+Read timings (ms) - Read: 1.898, Queue wait: 643.924, Push: 1.414, Total loop: 647.242
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.495, Text: 0.730, Imshow: 1.025, WaitKey: 659.609, Total loop: 662.878
+Read timings (ms) - Read: 2.053, Queue wait: 664.110, Push: 1.653, Total loop: 667.822
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.305, Text: 0.744, Imshow: 0.856, WaitKey: 648.692, Total loop: 651.615
+Read timings (ms) - Read: 1.856, Queue wait: 643.983, Push: 1.853, Total loop: 647.698
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.345, Text: 0.726, Imshow: 1.095, WaitKey: 657.501, Total loop: 660.684
+Read timings (ms) - Read: 1.838, Queue wait: 664.108, Push: 1.660, Total loop: 667.613
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.589, Text: 0.724, Imshow: 0.859, WaitKey: 661.319, Total loop: 664.510
+Read timings (ms) - Read: 1.995, Queue wait: 654.085, Push: 2.026, Total loop: 658.113
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.291, Text: 0.726, Imshow: 1.099, WaitKey: 647.704, Total loop: 650.838
+Read timings (ms) - Read: 1.707, Queue wait: 654.047, Push: 1.958, Total loop: 657.719
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.495, Text: 0.728, Imshow: 0.846, WaitKey: 646.167, Total loop: 649.254
+Read timings (ms) - Read: 1.947, Queue wait: 643.959, Push: 2.037, Total loop: 647.950
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.301, Text: 0.722, Imshow: 0.859, WaitKey: 662.649, Total loop: 665.550
+Read timings (ms) - Read: 1.956, Queue wait: 654.007, Push: 1.710, Total loop: 657.678
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.789, Text: 0.729, Imshow: 1.071, WaitKey: 658.538, Total loop: 662.147
+Read timings (ms) - Read: 1.872, Queue wait: 664.126, Push: 1.657, Total loop: 667.659
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.459, Text: 0.724, Imshow: 0.891, WaitKey: 647.449, Total loop: 650.542
+Read timings (ms) - Read: 1.783, Queue wait: 644.001, Push: 1.817, Total loop: 647.609
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.314, Text: 0.723, Imshow: 0.911, WaitKey: 659.467, Total loop: 662.433
+Read timings (ms) - Read: 1.897, Queue wait: 664.127, Push: 1.792, Total loop: 667.823
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.302, Text: 0.724, Imshow: 0.878, WaitKey: 665.713, Total loop: 668.635
+Read timings (ms) - Read: 1.927, Queue wait: 664.124, Push: 2.024, Total loop: 668.082
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.286, Text: 0.770, Imshow: 0.799, WaitKey: 658.385, Total loop: 661.260
+Read timings (ms) - Read: 1.827, Queue wait: 654.035, Push: 1.707, Total loop: 657.575
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.729, Text: 0.723, Imshow: 0.876, WaitKey: 648.584, Total loop: 651.931
+Read timings (ms) - Read: 1.889, Queue wait: 654.034, Push: 1.826, Total loop: 657.755
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.572, Text: 0.725, Imshow: 0.833, WaitKey: 667.442, Total loop: 670.590
+Read timings (ms) - Read: 1.997, Queue wait: 664.110, Push: 1.670, Total loop: 667.783
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.662, Text: 0.727, Imshow: 0.828, WaitKey: 659.196, Total loop: 662.432
+Read timings (ms) - Read: 1.826, Queue wait: 654.716, Push: 1.286, Total loop: 657.834
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.325, Text: 0.726, Imshow: 0.854, WaitKey: 722.780, Total loop: 725.703
+Read timings (ms) - Read: 1.353, Queue wait: 724.505, Push: 1.635, Total loop: 727.499
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.327, Text: 0.728, Imshow: 0.888, WaitKey: 658.889, Total loop: 661.850
+Read timings (ms) - Read: 1.802, Queue wait: 664.089, Push: 1.821, Total loop: 667.718
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.347, Text: 0.725, Imshow: 0.880, WaitKey: 647.337, Total loop: 650.307
+Read timings (ms) - Read: 1.973, Queue wait: 643.960, Push: 1.730, Total loop: 647.670
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.307, Text: 0.726, Imshow: 0.841, WaitKey: 659.716, Total loop: 662.610
+Read timings (ms) - Read: 1.873, Queue wait: 654.011, Push: 1.960, Total loop: 657.851
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.431, Text: 0.766, Imshow: 1.017, WaitKey: 647.062, Total loop: 650.295
+Read timings (ms) - Read: 1.799, Queue wait: 654.060, Push: 1.948, Total loop: 657.813
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.559, Text: 0.724, Imshow: 0.848, WaitKey: 611.454, Total loop: 614.604
+Read timings (ms) - Read: 2.024, Queue wait: 603.770, Push: 1.743, Total loop: 607.546
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.674, Text: 0.728, Imshow: 0.882, WaitKey: 651.549, Total loop: 654.851
+Read timings (ms) - Read: 1.879, Queue wait: 654.031, Push: 1.659, Total loop: 657.576
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.290, Text: 0.767, Imshow: 0.879, WaitKey: 661.897, Total loop: 664.851
+Read timings (ms) - Read: 1.803, Queue wait: 664.129, Push: 1.706, Total loop: 667.644
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.485, Text: 0.725, Imshow: 0.856, WaitKey: 660.977, Total loop: 664.062
+Read timings (ms) - Read: 1.923, Queue wait: 654.029, Push: 2.084, Total loop: 658.043
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.632, Text: 0.728, Imshow: 1.090, WaitKey: 661.887, Total loop: 665.357
+Read timings (ms) - Read: 1.861, Queue wait: 664.057, Push: 1.622, Total loop: 667.546
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.324, Text: 0.742, Imshow: 0.844, WaitKey: 654.783, Total loop: 657.712
+Read timings (ms) - Read: 1.841, Queue wait: 654.019, Push: 1.684, Total loop: 657.550
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.285, Text: 0.768, Imshow: 0.867, WaitKey: 662.133, Total loop: 665.071
+Read timings (ms) - Read: 1.812, Queue wait: 664.119, Push: 1.998, Total loop: 667.936
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.496, Text: 0.727, Imshow: 0.880, WaitKey: 659.808, Total loop: 662.928
+Read timings (ms) - Read: 1.893, Queue wait: 654.010, Push: 1.993, Total loop: 657.902
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.414, Text: 0.725, Imshow: 1.012, WaitKey: 659.144, Total loop: 662.313
+Read timings (ms) - Read: 1.791, Queue wait: 664.121, Push: 1.981, Total loop: 667.899
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.609, Text: 0.725, Imshow: 0.874, WaitKey: 661.829, Total loop: 665.056
+Read timings (ms) - Read: 1.900, Queue wait: 654.032, Push: 1.492, Total loop: 657.431
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.631, Text: 0.766, Imshow: 1.073, WaitKey: 649.216, Total loop: 652.704
+Read timings (ms) - Read: 2.165, Queue wait: 654.059, Push: 1.663, Total loop: 657.894
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.428, Text: 0.743, Imshow: 0.833, WaitKey: 659.362, Total loop: 662.385
+Read timings (ms) - Read: 1.848, Queue wait: 654.036, Push: 1.493, Total loop: 657.383
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.370, Text: 0.731, Imshow: 1.063, WaitKey: 653.569, Total loop: 656.752
+Read timings (ms) - Read: 1.918, Queue wait: 654.043, Push: 1.855, Total loop: 657.821
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.285, Text: 0.771, Imshow: 1.080, WaitKey: 662.710, Total loop: 665.864
+Read timings (ms) - Read: 1.901, Queue wait: 664.095, Push: 1.576, Total loop: 667.575
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.582, Text: 0.722, Imshow: 0.862, WaitKey: 660.085, Total loop: 663.270
+Read timings (ms) - Read: 1.801, Queue wait: 664.058, Push: 1.750, Total loop: 667.615
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.330, Text: 0.727, Imshow: 0.883, WaitKey: 650.305, Total loop: 653.263
+Read timings (ms) - Read: 1.883, Queue wait: 643.965, Push: 1.987, Total loop: 647.841
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.283, Text: 0.724, Imshow: 1.018, WaitKey: 671.778, Total loop: 674.822
+Read timings (ms) - Read: 1.841, Queue wait: 674.138, Push: 2.016, Total loop: 678.001
+Display timings (ms) - Queue wait: 0.001, Pop: 0.009, Clone: 1.306, Text: 0.727, Imshow: 0.890, WaitKey: 654.187, Total loop: 657.128
+Read timings (ms) - Read: 1.817, Queue wait: 654.057, Push: 1.876, Total loop: 657.757
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.615, Text: 0.724, Imshow: 0.867, WaitKey: 648.761, Total loop: 651.986
+Read timings (ms) - Read: 1.793, Queue wait: 643.975, Push: 1.890, Total loop: 647.664
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.461, Text: 0.723, Imshow: 1.103, WaitKey: 657.418, Total loop: 660.723
+Read timings (ms) - Read: 1.805, Queue wait: 664.106, Push: 1.937, Total loop: 667.854
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.362, Text: 0.770, Imshow: 0.834, WaitKey: 663.157, Total loop: 666.141
+Read timings (ms) - Read: 1.928, Queue wait: 654.034, Push: 1.398, Total loop: 657.365
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.485, Text: 0.734, Imshow: 1.213, WaitKey: 660.266, Total loop: 663.717
+Read timings (ms) - Read: 2.146, Queue wait: 664.123, Push: 1.978, Total loop: 668.251
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.286, Text: 0.725, Imshow: 0.974, WaitKey: 648.321, Total loop: 651.324
+Read timings (ms) - Read: 1.907, Queue wait: 643.980, Push: 1.509, Total loop: 647.402
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.587, Text: 0.732, Imshow: 1.187, WaitKey: 661.156, Total loop: 664.681
+Read timings (ms) - Read: 1.880, Queue wait: 664.106, Push: 1.662, Total loop: 667.653
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.558, Text: 0.726, Imshow: 0.960, WaitKey: 653.043, Total loop: 656.304
+Read timings (ms) - Read: 1.823, Queue wait: 654.043, Push: 1.684, Total loop: 657.555
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.617, Text: 0.725, Imshow: 0.950, WaitKey: 657.275, Total loop: 660.585
+Read timings (ms) - Read: 1.861, Queue wait: 654.461, Push: 1.589, Total loop: 657.916
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.313, Text: 0.726, Imshow: 0.912, WaitKey: 650.138, Total loop: 653.106
+Read timings (ms) - Read: 1.815, Queue wait: 654.032, Push: 1.678, Total loop: 657.531
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.321, Text: 0.726, Imshow: 0.903, WaitKey: 646.189, Total loop: 649.158
+Read timings (ms) - Read: 1.834, Queue wait: 648.168, Push: 1.740, Total loop: 651.749
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.336, Text: 0.725, Imshow: 0.942, WaitKey: 820.004, Total loop: 823.025
+Read timings (ms) - Read: 2.057, Queue wait: 814.984, Push: 1.640, Total loop: 818.687
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.310, Text: 0.725, Imshow: 0.840, WaitKey: 660.380, Total loop: 663.274
+Read timings (ms) - Read: 1.852, Queue wait: 664.119, Push: 1.969, Total loop: 667.946
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.566, Text: 0.725, Imshow: 0.849, WaitKey: 660.886, Total loop: 664.045
+Read timings (ms) - Read: 2.133, Queue wait: 654.017, Push: 1.827, Total loop: 657.982
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.597, Text: 0.726, Imshow: 0.858, WaitKey: 648.945, Total loop: 652.144
+Read timings (ms) - Read: 1.869, Queue wait: 654.078, Push: 1.797, Total loop: 657.752
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.712, Text: 0.726, Imshow: 0.861, WaitKey: 651.323, Total loop: 654.641
+Read timings (ms) - Read: 1.977, Queue wait: 644.004, Push: 1.606, Total loop: 647.593
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.284, Text: 0.725, Imshow: 0.931, WaitKey: 657.437, Total loop: 660.395
+Read timings (ms) - Read: 1.817, Queue wait: 664.111, Push: 1.718, Total loop: 667.653
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.446, Text: 0.771, Imshow: 0.907, WaitKey: 661.165, Total loop: 664.307
+Read timings (ms) - Read: 2.079, Queue wait: 654.039, Push: 1.747, Total loop: 657.870
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.648, Text: 0.727, Imshow: 0.882, WaitKey: 665.142, Total loop: 668.417
+Read timings (ms) - Read: 1.767, Queue wait: 664.098, Push: 1.644, Total loop: 667.516
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.330, Text: 0.724, Imshow: 0.927, WaitKey: 663.126, Total loop: 666.125
+Read timings (ms) - Read: 1.802, Queue wait: 664.110, Push: 1.589, Total loop: 667.505
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.285, Text: 0.723, Imshow: 0.904, WaitKey: 664.304, Total loop: 667.236
+Read timings (ms) - Read: 1.898, Queue wait: 664.072, Push: 1.868, Total loop: 667.842
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.480, Text: 0.723, Imshow: 0.825, WaitKey: 658.944, Total loop: 661.990
+Read timings (ms) - Read: 1.847, Queue wait: 654.014, Push: 1.884, Total loop: 657.750
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.907, Text: 0.735, Imshow: 1.056, WaitKey: 654.126, Total loop: 657.845
+Read timings (ms) - Read: 2.050, Queue wait: 654.053, Push: 1.669, Total loop: 657.776
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.742, Text: 0.733, Imshow: 1.147, WaitKey: 651.141, Total loop: 654.781
+Read timings (ms) - Read: 2.089, Queue wait: 654.066, Push: 1.666, Total loop: 657.827
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.547, Text: 0.726, Imshow: 0.847, WaitKey: 659.256, Total loop: 662.396
+Read timings (ms) - Read: 1.801, Queue wait: 664.140, Push: 1.723, Total loop: 667.672
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.391, Text: 0.769, Imshow: 0.908, WaitKey: 660.896, Total loop: 663.982
+Read timings (ms) - Read: 2.044, Queue wait: 654.455, Push: 1.577, Total loop: 658.082
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.278, Text: 0.782, Imshow: 0.852, WaitKey: 665.711, Total loop: 668.642
+Read timings (ms) - Read: 2.037, Queue wait: 664.054, Push: 2.498, Total loop: 668.595
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.314, Text: 0.725, Imshow: 0.914, WaitKey: 659.386, Total loop: 662.358
+Read timings (ms) - Read: 1.941, Queue wait: 664.074, Push: 1.672, Total loop: 667.694
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.589, Text: 0.723, Imshow: 0.838, WaitKey: 661.662, Total loop: 664.831
+Read timings (ms) - Read: 1.912, Queue wait: 654.241, Push: 1.619, Total loop: 657.779
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.345, Text: 0.763, Imshow: 6.607, WaitKey: 658.979, Total loop: 667.713
+Read timings (ms) - Read: 1.561, Queue wait: 664.324, Push: 1.556, Total loop: 667.446
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.373, Text: 0.765, Imshow: 6.717, WaitKey: 623.952, Total loop: 632.825
+Read timings (ms) - Read: 1.335, Queue wait: 634.103, Push: 1.424, Total loop: 636.868
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.335, Text: 0.723, Imshow: 6.746, WaitKey: 625.420, Total loop: 634.242
+Read timings (ms) - Read: 1.376, Queue wait: 627.155, Push: 1.261, Total loop: 629.799
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 3.259, Text: 0.747, Imshow: 6.688, WaitKey: 622.329, Total loop: 633.042
+Read timings (ms) - Read: 1.775, Queue wait: 634.117, Push: 1.256, Total loop: 637.153
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.529, Text: 0.724, Imshow: 6.694, WaitKey: 626.476, Total loop: 635.440
+Read timings (ms) - Read: 1.442, Queue wait: 634.090, Push: 1.735, Total loop: 637.273
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.275, Text: 0.764, Imshow: 4.342, WaitKey: 629.795, Total loop: 636.195
+Read timings (ms) - Read: 1.819, Queue wait: 634.089, Push: 1.891, Total loop: 637.806
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.289, Text: 0.758, Imshow: 0.827, WaitKey: 633.717, Total loop: 636.610
+Read timings (ms) - Read: 1.903, Queue wait: 634.080, Push: 2.039, Total loop: 638.030
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.336, Text: 0.727, Imshow: 1.131, WaitKey: 617.761, Total loop: 620.973
+Read timings (ms) - Read: 2.093, Queue wait: 613.937, Push: 1.887, Total loop: 617.924
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.523, Text: 0.721, Imshow: 1.124, WaitKey: 630.875, Total loop: 634.262
+Read timings (ms) - Read: 1.921, Queue wait: 634.079, Push: 1.806, Total loop: 637.812
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.580, Text: 0.723, Imshow: 3.581, WaitKey: 619.611, Total loop: 625.514
+Read timings (ms) - Read: 1.964, Queue wait: 613.975, Push: 2.000, Total loop: 617.944
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.582, Text: 0.723, Imshow: 1.028, WaitKey: 630.538, Total loop: 633.891
+Read timings (ms) - Read: 1.712, Queue wait: 634.072, Push: 1.645, Total loop: 637.436
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.304, Text: 0.768, Imshow: 0.868, WaitKey: 638.717, Total loop: 641.676
+Read timings (ms) - Read: 1.839, Queue wait: 634.090, Push: 2.000, Total loop: 637.934
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.273, Text: 0.722, Imshow: 1.064, WaitKey: 630.562, Total loop: 633.640
+Read timings (ms) - Read: 1.821, Queue wait: 634.035, Push: 1.245, Total loop: 637.106
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.333, Text: 0.726, Imshow: 0.902, WaitKey: 666.573, Total loop: 669.552
+Read timings (ms) - Read: 1.315, Queue wait: 664.318, Push: 1.567, Total loop: 667.204
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.299, Text: 0.726, Imshow: 0.834, WaitKey: 635.018, Total loop: 637.896
+Read timings (ms) - Read: 1.788, Queue wait: 634.057, Push: 1.792, Total loop: 637.642
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.417, Text: 0.724, Imshow: 0.845, WaitKey: 631.217, Total loop: 634.222
+Read timings (ms) - Read: 1.933, Queue wait: 634.110, Push: 2.027, Total loop: 638.076
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.567, Text: 0.725, Imshow: 0.816, WaitKey: 632.729, Total loop: 635.855
+Read timings (ms) - Read: 1.816, Queue wait: 634.106, Push: 1.786, Total loop: 637.715
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.610, Text: 0.725, Imshow: 0.809, WaitKey: 622.763, Total loop: 625.927
+Read timings (ms) - Read: 1.923, Queue wait: 613.942, Push: 1.393, Total loop: 617.265
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.454, Text: 0.729, Imshow: 1.067, WaitKey: 628.644, Total loop: 631.913
+Read timings (ms) - Read: 2.170, Queue wait: 634.146, Push: 1.678, Total loop: 638.000
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.435, Text: 0.723, Imshow: 0.925, WaitKey: 631.521, Total loop: 634.623
+Read timings (ms) - Read: 1.805, Queue wait: 634.121, Push: 1.884, Total loop: 637.817
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.594, Text: 0.722, Imshow: 0.872, WaitKey: 629.348, Total loop: 632.555
+Read timings (ms) - Read: 1.953, Queue wait: 623.989, Push: 1.622, Total loop: 627.570
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.277, Text: 0.725, Imshow: 0.884, WaitKey: 630.336, Total loop: 633.241
+Read timings (ms) - Read: 1.926, Queue wait: 634.093, Push: 1.740, Total loop: 637.765
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.269, Text: 0.769, Imshow: 0.827, WaitKey: 630.668, Total loop: 633.552
+Read timings (ms) - Read: 1.938, Queue wait: 623.998, Push: 1.804, Total loop: 627.746
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.457, Text: 0.724, Imshow: 0.853, WaitKey: 633.461, Total loop: 636.514
+Read timings (ms) - Read: 1.803, Queue wait: 634.086, Push: 1.802, Total loop: 637.697
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.360, Text: 0.722, Imshow: 0.891, WaitKey: 633.414, Total loop: 636.407
+Read timings (ms) - Read: 1.905, Queue wait: 634.154, Push: 2.013, Total loop: 638.078
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.599, Text: 0.722, Imshow: 0.831, WaitKey: 637.777, Total loop: 640.946
+Read timings (ms) - Read: 1.806, Queue wait: 634.055, Push: 1.601, Total loop: 637.467
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.504, Text: 0.770, Imshow: 0.804, WaitKey: 637.733, Total loop: 640.829
+Read timings (ms) - Read: 1.809, Queue wait: 644.175, Push: 1.699, Total loop: 647.689
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.431, Text: 0.724, Imshow: 3.058, WaitKey: 630.525, Total loop: 635.756
+Read timings (ms) - Read: 1.722, Queue wait: 624.012, Push: 1.453, Total loop: 627.192
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.305, Text: 0.729, Imshow: 15.719, WaitKey: 622.729, Total loop: 640.502
+Read timings (ms) - Read: 1.440, Queue wait: 644.167, Push: 1.958, Total loop: 647.571
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.283, Text: 0.726, Imshow: 2.732, WaitKey: 631.362, Total loop: 636.122
+Read timings (ms) - Read: 1.567, Queue wait: 634.090, Push: 1.324, Total loop: 636.987
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.585, Text: 0.725, Imshow: 0.878, WaitKey: 630.965, Total loop: 634.170
+Read timings (ms) - Read: 1.493, Queue wait: 624.022, Push: 1.467, Total loop: 626.987
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.351, Text: 0.770, Imshow: 3.713, WaitKey: 642.532, Total loop: 648.384
+Read timings (ms) - Read: 1.427, Queue wait: 644.230, Push: 1.314, Total loop: 646.977
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 3.002, Text: 0.734, Imshow: 11.378, WaitKey: 625.290, Total loop: 640.423
+Read timings (ms) - Read: 1.874, Queue wait: 644.183, Push: 2.073, Total loop: 648.135
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.320, Text: 0.727, Imshow: 3.198, WaitKey: 634.294, Total loop: 639.555
+Read timings (ms) - Read: 1.585, Queue wait: 634.092, Push: 1.589, Total loop: 637.272
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.636, Text: 0.744, Imshow: 0.845, WaitKey: 634.573, Total loop: 637.818
+Read timings (ms) - Read: 1.925, Queue wait: 634.082, Push: 1.696, Total loop: 637.709
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.448, Text: 0.721, Imshow: 1.175, WaitKey: 631.286, Total loop: 634.647
+Read timings (ms) - Read: 1.910, Queue wait: 634.109, Push: 1.900, Total loop: 637.927
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.295, Text: 0.726, Imshow: 1.096, WaitKey: 630.249, Total loop: 633.385
+Read timings (ms) - Read: 2.155, Queue wait: 634.443, Push: 1.426, Total loop: 638.030
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.290, Text: 0.722, Imshow: 1.010, WaitKey: 644.504, Total loop: 647.545
+Read timings (ms) - Read: 1.461, Queue wait: 634.047, Push: 1.438, Total loop: 636.952
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.288, Text: 0.725, Imshow: 0.850, WaitKey: 633.357, Total loop: 636.238
+Read timings (ms) - Read: 1.480, Queue wait: 634.327, Push: 1.351, Total loop: 637.163
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.530, Text: 0.725, Imshow: 0.854, WaitKey: 635.141, Total loop: 638.269
+Read timings (ms) - Read: 1.496, Queue wait: 634.175, Push: 1.410, Total loop: 637.086
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.605, Text: 0.724, Imshow: 0.815, WaitKey: 633.257, Total loop: 636.419
+Read timings (ms) - Read: 1.917, Queue wait: 634.042, Push: 1.208, Total loop: 637.172
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.586, Text: 0.724, Imshow: 5.158, WaitKey: 630.764, Total loop: 638.250
+Read timings (ms) - Read: 1.364, Queue wait: 634.310, Push: 1.373, Total loop: 637.052
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.283, Text: 0.772, Imshow: 1.489, WaitKey: 638.295, Total loop: 641.856
+Read timings (ms) - Read: 1.927, Queue wait: 644.189, Push: 1.677, Total loop: 647.800
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.270, Text: 0.724, Imshow: 1.070, WaitKey: 636.607, Total loop: 639.690
+Read timings (ms) - Read: 1.984, Queue wait: 634.142, Push: 1.387, Total loop: 637.518
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.325, Text: 0.727, Imshow: 2.206, WaitKey: 647.700, Total loop: 651.975
+Read timings (ms) - Read: 1.482, Queue wait: 645.124, Push: 1.310, Total loop: 647.921
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.261, Text: 0.759, Imshow: 1.807, WaitKey: 647.763, Total loop: 651.608
+Read timings (ms) - Read: 1.912, Queue wait: 654.088, Push: 2.004, Total loop: 658.010
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.412, Text: 0.724, Imshow: 2.276, WaitKey: 627.624, Total loop: 632.055
+Read timings (ms) - Read: 2.016, Queue wait: 624.030, Push: 1.817, Total loop: 627.869
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.564, Text: 0.728, Imshow: 0.806, WaitKey: 634.557, Total loop: 637.674
+Read timings (ms) - Read: 1.949, Queue wait: 634.085, Push: 1.748, Total loop: 637.787
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.596, Text: 0.771, Imshow: 0.834, WaitKey: 634.412, Total loop: 637.631
+Read timings (ms) - Read: 1.966, Queue wait: 634.112, Push: 1.624, Total loop: 637.708
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.300, Text: 0.728, Imshow: 0.810, WaitKey: 632.498, Total loop: 635.356
+Read timings (ms) - Read: 1.958, Queue wait: 634.154, Push: 1.727, Total loop: 637.846
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.494, Text: 0.727, Imshow: 0.850, WaitKey: 633.637, Total loop: 636.727
+Read timings (ms) - Read: 1.897, Queue wait: 634.113, Push: 1.879, Total loop: 637.895
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.598, Text: 0.725, Imshow: 0.851, WaitKey: 635.173, Total loop: 638.366
+Read timings (ms) - Read: 1.962, Queue wait: 634.109, Push: 1.717, Total loop: 637.795
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.296, Text: 0.769, Imshow: 0.832, WaitKey: 629.775, Total loop: 632.691
+Read timings (ms) - Read: 1.855, Queue wait: 624.137, Push: 1.588, Total loop: 627.587
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.310, Text: 0.725, Imshow: 0.870, WaitKey: 631.493, Total loop: 634.416
+Read timings (ms) - Read: 1.909, Queue wait: 634.162, Push: 1.936, Total loop: 638.013
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.476, Text: 0.774, Imshow: 0.848, WaitKey: 631.519, Total loop: 634.635
+Read timings (ms) - Read: 2.025, Queue wait: 634.085, Push: 1.911, Total loop: 638.027
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.378, Text: 0.723, Imshow: 0.910, WaitKey: 632.052, Total loop: 635.082
+Read timings (ms) - Read: 2.004, Queue wait: 623.821, Push: 2.069, Total loop: 627.901
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.625, Text: 0.729, Imshow: 1.083, WaitKey: 629.742, Total loop: 633.197
+Read timings (ms) - Read: 1.843, Queue wait: 633.892, Push: 1.698, Total loop: 637.439
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.518, Text: 0.724, Imshow: 0.921, WaitKey: 630.852, Total loop: 634.034
+Read timings (ms) - Read: 1.986, Queue wait: 623.793, Push: 1.681, Total loop: 627.465
+Display timings (ms) - Queue wait: 0.001, Pop: 0.009, Clone: 1.739, Text: 0.733, Imshow: 1.098, WaitKey: 630.839, Total loop: 634.429
+Read timings (ms) - Read: 2.029, Queue wait: 633.926, Push: 1.538, Total loop: 637.497
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.276, Text: 0.722, Imshow: 0.874, WaitKey: 632.033, Total loop: 634.924
+Read timings (ms) - Read: 1.939, Queue wait: 633.899, Push: 1.959, Total loop: 637.804
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.278, Text: 0.726, Imshow: 0.805, WaitKey: 635.715, Total loop: 638.544
+Read timings (ms) - Read: 1.992, Queue wait: 633.871, Push: 1.624, Total loop: 637.493
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.598, Text: 0.726, Imshow: 0.835, WaitKey: 632.419, Total loop: 635.597
+Read timings (ms) - Read: 1.971, Queue wait: 633.900, Push: 1.761, Total loop: 637.639
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.359, Text: 0.727, Imshow: 0.857, WaitKey: 637.300, Total loop: 640.261
+Read timings (ms) - Read: 1.936, Queue wait: 633.872, Push: 1.888, Total loop: 637.703
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.311, Text: 0.729, Imshow: 0.851, WaitKey: 633.766, Total loop: 636.675
+Read timings (ms) - Read: 2.038, Queue wait: 633.896, Push: 2.075, Total loop: 638.016
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.333, Text: 0.724, Imshow: 0.841, WaitKey: 628.500, Total loop: 631.417
+Read timings (ms) - Read: 1.945, Queue wait: 624.548, Push: 1.666, Total loop: 628.164
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.624, Text: 0.725, Imshow: 0.876, WaitKey: 628.887, Total loop: 632.133
+Read timings (ms) - Read: 1.897, Queue wait: 633.891, Push: 1.685, Total loop: 637.480
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.459, Text: 0.725, Imshow: 0.849, WaitKey: 630.856, Total loop: 633.908
+Read timings (ms) - Read: 2.146, Queue wait: 624.283, Push: 1.718, Total loop: 628.153
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.284, Text: 0.768, Imshow: 0.823, WaitKey: 633.888, Total loop: 636.781
+Read timings (ms) - Read: 1.958, Queue wait: 633.878, Push: 1.658, Total loop: 637.501
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.333, Text: 0.726, Imshow: 0.821, WaitKey: 633.532, Total loop: 636.429
+Read timings (ms) - Read: 1.916, Queue wait: 633.881, Push: 1.976, Total loop: 637.778
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.343, Text: 0.725, Imshow: 0.789, WaitKey: 635.607, Total loop: 638.485
+Read timings (ms) - Read: 2.029, Queue wait: 633.891, Push: 1.739, Total loop: 637.665
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.536, Text: 0.771, Imshow: 0.832, WaitKey: 631.698, Total loop: 634.855
+Read timings (ms) - Read: 1.924, Queue wait: 633.876, Push: 1.781, Total loop: 637.587
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.561, Text: 0.724, Imshow: 0.851, WaitKey: 633.693, Total loop: 636.847
+Read timings (ms) - Read: 1.958, Queue wait: 633.882, Push: 1.667, Total loop: 637.513
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.602, Text: 0.773, Imshow: 0.824, WaitKey: 627.713, Total loop: 630.930
+Read timings (ms) - Read: 2.070, Queue wait: 623.789, Push: 1.581, Total loop: 627.445
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.313, Text: 0.724, Imshow: 0.839, WaitKey: 631.852, Total loop: 634.747
+Read timings (ms) - Read: 1.989, Queue wait: 633.892, Push: 1.918, Total loop: 637.805
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.299, Text: 0.727, Imshow: 0.923, WaitKey: 631.269, Total loop: 634.235
+Read timings (ms) - Read: 1.936, Queue wait: 623.795, Push: 1.376, Total loop: 627.113
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.438, Text: 0.780, Imshow: 0.862, WaitKey: 631.078, Total loop: 634.177
+Read timings (ms) - Read: 1.890, Queue wait: 634.307, Push: 1.630, Total loop: 637.832
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.385, Text: 0.738, Imshow: 0.882, WaitKey: 630.606, Total loop: 633.628
+Read timings (ms) - Read: 1.959, Queue wait: 633.872, Push: 1.436, Total loop: 637.272
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.472, Text: 0.759, Imshow: 0.864, WaitKey: 680.366, Total loop: 683.480
+Read timings (ms) - Read: 1.490, Queue wait: 674.813, Push: 1.744, Total loop: 678.052
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.595, Text: 0.761, Imshow: 0.817, WaitKey: 625.596, Total loop: 628.788
+Read timings (ms) - Read: 1.948, Queue wait: 623.777, Push: 2.347, Total loop: 628.077
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.636, Text: 0.726, Imshow: 0.814, WaitKey: 642.295, Total loop: 645.491
+Read timings (ms) - Read: 2.253, Queue wait: 643.929, Push: 1.637, Total loop: 647.825
+End of video.
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.291, Text: 0.725, Imshow: 0.829, WaitKey: 638.613, Total loop: 641.477
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.415, Text: 0.759, Imshow: 0.853, WaitKey: 633.520, Total loop: 636.568
+Display timings (ms) - Queue wait: 0.001, Pop: 0.009, Clone: 1.288, Text: 0.759, Imshow: 0.842, WaitKey: 632.994, Total loop: 635.903
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.420, Text: 0.723, Imshow: 0.853, WaitKey: 635.972, Total loop: 638.987
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.604, Text: 0.768, Imshow: 0.920, WaitKey: 629.103, Total loop: 632.414
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.327, Text: 0.768, Imshow: 0.800, WaitKey: 634.569, Total loop: 637.484
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.411, Text: 0.725, Imshow: 0.876, WaitKey: 629.644, Total loop: 632.676
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.294, Text: 0.725, Imshow: 0.847, WaitKey: 632.031, Total loop: 634.916
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.318, Text: 0.725, Imshow: 0.938, WaitKey: 632.031, Total loop: 635.032
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.330, Text: 0.725, Imshow: 0.873, WaitKey: 630.437, Total loop: 633.385
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.632, Text: 0.728, Imshow: 0.873, WaitKey: 637.542, Total loop: 640.793
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.313, Text: 0.725, Imshow: 0.870, WaitKey: 631.094, Total loop: 634.021
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.329, Text: 0.726, Imshow: 0.836, WaitKey: 632.260, Total loop: 635.170
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.630, Text: 0.727, Imshow: 0.886, WaitKey: 632.901, Total loop: 636.164
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.622, Text: 0.742, Imshow: 0.927, WaitKey: 634.043, Total loop: 637.353
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.573, Text: 0.723, Imshow: 0.840, WaitKey: 632.704, Total loop: 635.858
+Display timings (ms) - Queue wait: 0.001, Pop: 0.008, Clone: 1.302, Text: 0.724, Imshow: 0.833, WaitKey: 635.967, Total loop: 638.846
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.388, Text: 0.725, Imshow: 0.870, WaitKey: 632.311, Total loop: 635.313
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.583, Text: 0.727, Imshow: 0.912, WaitKey: 628.170, Total loop: 631.411
+Display timings (ms) - Queue wait: 0.002, Pop: 0.008, Clone: 1.559, Text: 0.768, Imshow: 0.895, WaitKey: 630.393, Total loop: 633.634
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.651, Text: 0.728, Imshow: 0.805, WaitKey: 630.751, Total loop: 633.954
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.317, Text: 0.723, Imshow: 0.918, WaitKey: 635.330, Total loop: 638.306
+Display timings (ms) - Queue wait: 0.001, Pop: 0.009, Clone: 1.277, Text: 0.725, Imshow: 0.819, WaitKey: 631.002, Total loop: 633.842
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.282, Text: 0.769, Imshow: 0.839, WaitKey: 633.821, Total loop: 636.730
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.318, Text: 0.725, Imshow: 0.949, WaitKey: 631.014, Total loop: 634.026
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.433, Text: 0.724, Imshow: 0.855, WaitKey: 630.492, Total loop: 633.523
+Display timings (ms) - Queue wait: 0.002, Pop: 0.007, Clone: 1.391, Text: 0.728, Imshow: 0.887, WaitKey: 632.304, Total loop: 635.328
+Display timings (ms) - Queue wait: 0.001, Pop: 0.007, Clone: 1.604, Text: 0.770, Imshow: 0.904, WaitKey: 631.007, Total loop: 634.303
+Display timings (ms) - Queue wait: 0.002, Pop: 0.006, Clone: 1.362, Text: 0.727, Imshow: 1.018, WaitKey: 634.005, Total loop: 637.130
+Display timings (ms) - Queue wait: 0.001, Pop: 0.006, Clone: 1.306, Text: 0.724, Imshow: 1.050, WaitKey: 634.879, Total loop: 637.976
+Display finished
+Program finished.
