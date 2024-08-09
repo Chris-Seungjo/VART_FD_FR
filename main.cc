@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//rev3
+//rev1
 
 #include <unistd.h>
 
@@ -83,33 +83,113 @@ GraphInfo shapes;
  */
 //비디오를 읽어서 frame을 저장하는 함수
 void Read(bool& is_reading) {
-  //is_reading이 true인 동안 계속 실행
-  while (is_reading) {
-    //video frame을 저장할 Mat 객체 선언
-    Mat img;
+    std::chrono::high_resolution_clock::time_point start_time, end_time, frame_start_time;
+    std::chrono::duration<double, std::micro> duration;
+    
+    double total_read_time = 0.0;
+    double total_queue_check_time = 0.0;
+    double total_queue_push_time = 0.0;
+    double total_mutex_lock_time = 0.0;
+    double total_mutex_unlock_time = 0.0;
+    double total_sleep_time = 0.0;
+    int frame_count = 0;
+    int sleep_count = 0;
 
-    //read_queue size가 30미만인 경우에만 new frame을 읽음
-    if (read_queue.size() < 30) {
-      //video에서 new frame 읽기 시도
-      if (!video.read(img)) {
-        //더이상 읽을 frame이 없으면 비디오 종료
-        cout << "Video end." << endl;
-        is_reading = false;
-        break;
-      }
-      //read_queue에 접근하기 위해 mutex 잠금
-      mtx_read_queue.lock();
-      //읽은 frame을 index와 함께 대기열에 추가
-      //read_index는 각 frame에 고유번호를 부여하고, 추가 후 증가
-      read_queue.push(make_pair(read_index++, img));  //End of the read_queue에 (index, img)를 추가
-      //mutex 잠금 해제
-      mtx_read_queue.unlock();
-    } else {
-      //대기열이 가득 찼을 경우(30개 이상의 frame)
-      //20us동안 대기
-      usleep(20);
+    while (is_reading) {
+        frame_start_time = std::chrono::high_resolution_clock::now();
+        double frame_queue_check_time = 0.0;
+        double frame_read_time = 0.0;
+        double frame_mutex_lock_time = 0.0;
+        double frame_queue_push_time = 0.0;
+        double frame_mutex_unlock_time = 0.0;
+        double frame_sleep_time = 0.0;
+
+        Mat img;
+
+        // Measure queue size check time
+        start_time = std::chrono::high_resolution_clock::now();
+        bool queue_not_full = (read_queue.size() < 30);
+        end_time = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+        frame_queue_check_time = duration.count();
+        total_queue_check_time += frame_queue_check_time;
+
+        if (queue_not_full) {
+            // Measure video read time
+            start_time = std::chrono::high_resolution_clock::now();
+            bool read_success = video.read(img);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_read_time = duration.count();
+            total_read_time += frame_read_time;
+
+            if (!read_success) {
+                cout << "Video end." << endl;
+                is_reading = false;
+                break;
+            }
+
+            // Measure mutex lock time
+            start_time = std::chrono::high_resolution_clock::now();
+            mtx_read_queue.lock();
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_mutex_lock_time = duration.count();
+            total_mutex_lock_time += frame_mutex_lock_time;
+
+            // Measure queue push time
+            start_time = std::chrono::high_resolution_clock::now();
+            read_queue.push(make_pair(read_index++, img));
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_queue_push_time = duration.count();
+            total_queue_push_time += frame_queue_push_time;
+
+            // Measure mutex unlock time
+            start_time = std::chrono::high_resolution_clock::now();
+            mtx_read_queue.unlock();
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_mutex_unlock_time = duration.count();
+            total_mutex_unlock_time += frame_mutex_unlock_time;
+
+            frame_count++;
+
+            // Print timing information for this frame
+            auto frame_end_time = std::chrono::high_resolution_clock::now();
+            auto frame_total_duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(frame_end_time - frame_start_time);
+            cout << "Read Frame " << frame_count << " timings:" << endl;
+            cout << "  Queue check: " << frame_queue_check_time << " µs" << endl;
+            cout << "  Read: " << frame_read_time << " µs" << endl;
+            cout << "  Mutex lock: " << frame_mutex_lock_time << " µs" << endl;
+            cout << "  Queue push: " << frame_queue_push_time << " µs" << endl;
+            cout << "  Mutex unlock: " << frame_mutex_unlock_time << " µs" << endl;
+            cout << "  Total frame time: " << frame_total_duration.count() << " µs" << endl;
+        } else {
+            // Measure sleep time
+            start_time = std::chrono::high_resolution_clock::now();
+            usleep(20);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_sleep_time = duration.count();
+            total_sleep_time += frame_sleep_time;
+            sleep_count++;
+
+            // Print sleep information
+            cout << "Sleep duration: " << frame_sleep_time << " µs" << endl;
+        }
     }
-  }
+
+    // Print final statistics
+    cout << "Read function final statistics:" << endl;
+    cout << "  Total frames processed: " << frame_count << endl;
+    cout << "  Average queue check time: " << total_queue_check_time / frame_count << " µs" << endl;
+    cout << "  Average read time: " << total_read_time / frame_count << " µs" << endl;
+    cout << "  Average mutex lock time: " << total_mutex_lock_time / frame_count << " µs" << endl;
+    cout << "  Average queue push time: " << total_queue_push_time / frame_count << " µs" << endl;
+    cout << "  Average mutex unlock time: " << total_mutex_unlock_time / frame_count << " µs" << endl;
+    cout << "  Average sleep time: " << (sleep_count > 0 ? total_sleep_time / sleep_count : 0) << " µs" << endl;
+    cout << "  Total sleep count: " << sleep_count << endl;
 }
 
 /**
@@ -120,44 +200,46 @@ void Read(bool& is_reading) {
  * @return none
  */
 void Display(bool& is_displaying) {
-    // Create a named window for displaying the video analysis
-    cv::namedWindow("Video Analysis", cv::WINDOW_NORMAL);
-    // Resize the window to 1280x720 pixels
-    cv::resizeWindow("Video Analysis", 1280, 720);
+    std::chrono::high_resolution_clock::time_point start_time, end_time;
+    std::chrono::duration<double, std::micro> duration;
+    
+    double total_window_creation_time = 0.0;
+    double total_queue_check_time = 0.0;
+    double total_frame_processing_time = 0.0;
+    double total_imshow_time = 0.0;
+    double total_waitkey_time = 0.0;
+    int frame_count = 0;
 
-    // Variable to store the last frame time for FPS calculation
+    // Measure window creation time
+    start_time = std::chrono::high_resolution_clock::now();
+    cv::namedWindow("Video Analysis", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Video Analysis", 1280, 720);
+    end_time = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+    total_window_creation_time = duration.count();
+
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
-    // Continue displaying frames as long as is_displaying is true
     while (is_displaying) {
-        // Lock the mutex to safely access the shared display_queue
+        start_time = std::chrono::high_resolution_clock::now();
         mtx_display_queue.lock();
+        bool queue_empty = display_queue.empty();
+        mtx_display_queue.unlock();
+        end_time = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+        total_queue_check_time += duration.count();
         
-        if (display_queue.empty()) {
-            // If the display queue is empty, check if processing is still ongoing
-            if (std::any_of(is_running.begin(), is_running.end(), [](bool v) { return v; }) || is_reading) {
-                // If processing is ongoing, unlock the mutex and wait for a short time
-                mtx_display_queue.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                continue;
-            } else {
-                // If processing is finished and queue is empty, end the display loop
-                is_displaying = false;
-                mtx_display_queue.unlock();
-                break;
-            }
-        } else {
-            // If there are frames to display, get the top frame from the queue
+        if (!queue_empty) {
+            start_time = std::chrono::high_resolution_clock::now();
+            mtx_display_queue.lock();
             auto current_frame = display_queue.top();
             display_queue.pop();
             mtx_display_queue.unlock();
 
-            // Calculate current FPS
             auto currentTime = std::chrono::high_resolution_clock::now();
             double fps = 1.0 / std::chrono::duration<double>(currentTime - lastFrameTime).count();
             lastFrameTime = currentTime;
 
-            // Display current FPS on the frame
             cv::putText(current_frame.second, 
                         "FPS: " + std::to_string(int(fps)), 
                         cv::Point(10, 30), 
@@ -165,14 +247,23 @@ void Display(bool& is_displaying) {
                         1, 
                         cv::Scalar(0, 255, 0), 
                         2);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            total_frame_processing_time += duration.count();
 
-            // Display the frame
+            start_time = std::chrono::high_resolution_clock::now();
             cv::imshow("Video Analysis", current_frame.second);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            total_imshow_time += duration.count();
             
-            // Check for user input to exit
+            start_time = std::chrono::high_resolution_clock::now();
             int key = cv::waitKey(1);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            total_waitkey_time += duration.count();
+
             if (key == 'q' || key == 27) {  // 'q' or ESC key
-                // If 'q' or ESC is pressed, signal all threads to stop
                 is_displaying = false;
                 is_reading = false;
                 for (auto& running : is_running) {
@@ -180,10 +271,35 @@ void Display(bool& is_displaying) {
                 }
                 break;
             }
+
+            frame_count++;
+
+            // Print timing information for this frame
+            cout << "Display Frame " << frame_count << " timings:" << endl;
+            cout << "  Queue check: " << total_queue_check_time / frame_count << " µs" << endl;
+            cout << "  Frame processing: " << total_frame_processing_time / frame_count << " µs" << endl;
+            cout << "  ImShow: " << total_imshow_time / frame_count << " µs" << endl;
+            cout << "  WaitKey: " << total_waitkey_time / frame_count << " µs" << endl;
+            cout << "  FPS: " << fps << endl;
+        } else {
+            if (std::any_of(is_running.begin(), is_running.end(), [](bool v) { return v; }) || is_reading) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            } else {
+                is_displaying = false;
+                break;
+            }
         }
     }
 
-    // Close all OpenCV windows when display loop ends
+    // Print final statistics
+    cout << "Display function final statistics:" << endl;
+    cout << "  Window creation time: " << total_window_creation_time << " µs" << endl;
+    cout << "  Total frames displayed: " << frame_count << endl;
+    cout << "  Average queue check time: " << total_queue_check_time / frame_count << " µs" << endl;
+    cout << "  Average frame processing time: " << total_frame_processing_time / frame_count << " µs" << endl;
+    cout << "  Average ImShow time: " << total_imshow_time / frame_count << " µs" << endl;
+    cout << "  Average WaitKey time: " << total_waitkey_time / frame_count << " µs" << endl;
+
     cv::destroyAllWindows();
 }
 
