@@ -258,7 +258,7 @@ void Display(bool& is_displaying) {
             total_imshow_time += duration.count();
             
             start_time = std::chrono::high_resolution_clock::now();
-            int key = cv::waitKey(1);
+            int key = cv::waitKey(30);
             end_time = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
             total_waitkey_time += duration.count();
