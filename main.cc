@@ -41,7 +41,7 @@
 using namespace std;
 using namespace cv;
 
-const int TNUM = 4; //쓰래드 돌릴 갯수, FD하나만 할 때는 1 (원래는 6개라 6이었음)
+const int TNUM = 2; //쓰래드 돌릴 갯수, FD하나만 할 때는 1 (원래는 6개라 6이었음)
 
 //For calculating FPS
 const int FPS_QUEUE_SIZE = 30;  // Number of frames to average for FPS calculation
