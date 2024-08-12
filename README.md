@@ -2,7 +2,7 @@
 
 ## Overview of `main.cc`
 
-Our video analysis pipeline consists of four main components, each running in its own thread:
+The video analysis pipeline consists of four main components, each running in its own thread:
 
 1. **Read**: Reads frames from the video input
 2. **FD (Face Detection)**: Determines appropriate bounding box coordinates for faces
