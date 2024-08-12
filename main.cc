@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//rev1
+//rev2
 
 #include <unistd.h>
 
@@ -168,6 +168,8 @@ void Display(bool& is_displaying) {
 
             // Display the frame
             cv::imshow("Video Analysis", current_frame.second);
+
+            int key = cv::waitKey(30);
             
         }
     }
