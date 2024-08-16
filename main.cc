@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//rev2
+//rev12
 
 #include <unistd.h>
 
@@ -40,6 +40,8 @@
 
 using namespace std;
 using namespace cv;
+
+const int TNUM = 4; //쓰래드 돌릴 갯수, FD하나만 할 때는 1 (원래는 6개라 6이었음)
 
 //For calculating FPS
 const int FPS_QUEUE_SIZE = 30;  // Number of frames to average for FPS calculation
@@ -72,6 +74,15 @@ int display_index = 0;    // frame index to display
 
 GraphInfo shapes;
 
+struct YUVVideoInfo {
+    int width;
+    int height;
+    int fps;
+    std::ifstream file;
+};
+
+YUVVideoInfo yuv_video;
+
 /**
  * @brief Read frames into read queue from a video
  *
@@ -79,35 +90,126 @@ GraphInfo shapes;
  *
  * @return none
  */
-//비디오를 읽어서 frame을 저장하는 함수
-void Read(bool& is_reading) {
-  //is_reading이 true인 동안 계속 실행
-  while (is_reading) {
-    //video frame을 저장할 Mat 객체 선언
-    Mat img;
 
-    //read_queue size가 30미만인 경우에만 new frame을 읽음
-    if (read_queue.size() < 30) {
-      //video에서 new frame 읽기 시도
-      if (!video.read(img)) {
-        //더이상 읽을 frame이 없으면 비디오 종료
-        cout << "Video end." << endl;
-        is_reading = false;
-        break;
-      }
-      //read_queue에 접근하기 위해 mutex 잠금
-      mtx_read_queue.lock();
-      //읽은 frame을 index와 함께 대기열에 추가
-      //read_index는 각 frame에 고유번호를 부여하고, 추가 후 증가
-      read_queue.push(make_pair(read_index++, img));  //End of the read_queue에 (index, img)를 추가
-      //mutex 잠금 해제
-      mtx_read_queue.unlock();
-    } else {
-      //대기열이 가득 찼을 경우(30개 이상의 frame)
-      //20us동안 대기
-      usleep(20);
+// Function to read a YUV420 frame from file
+cv::Mat readYUV420Frame(YUVVideoInfo& video) {
+    int frameSize = video.width * video.height * 3 / 2;
+    std::vector<uint8_t> yuv_data(frameSize);
+
+    if (video.file.read(reinterpret_cast<char*>(yuv_data.data()), frameSize)) {
+        cv::Mat yuv(video.height * 3 / 2, video.width, CV_8UC1, yuv_data.data());
+        cv::Mat bgr;
+        cv::cvtColor(yuv, bgr, cv::COLOR_YUV2BGR_I420);
+        return bgr;
     }
-  }
+    return cv::Mat();
+}
+
+//비디오를 읽어서 frame을 저장하는 함수
+// Modified Read function
+void Read(bool& is_reading) {
+    std::chrono::high_resolution_clock::time_point start_time, end_time, frame_start_time;
+    std::chrono::duration<double, std::micro> duration;
+    
+    double total_read_time = 0.0;
+    double total_queue_check_time = 0.0;
+    double total_queue_push_time = 0.0;
+    double total_mutex_lock_time = 0.0;
+    double total_mutex_unlock_time = 0.0;
+    double total_sleep_time = 0.0;
+    int frame_count = 0;
+    int sleep_count = 0;
+
+    while (is_reading) {
+        frame_start_time = std::chrono::high_resolution_clock::now();
+        double frame_queue_check_time = 0.0;
+        double frame_read_time = 0.0;
+        double frame_mutex_lock_time = 0.0;
+        double frame_queue_push_time = 0.0;
+        double frame_mutex_unlock_time = 0.0;
+        double frame_sleep_time = 0.0;
+
+        // Measure queue size check time
+        start_time = std::chrono::high_resolution_clock::now();
+        bool queue_not_full = (read_queue.size() < 30);
+        end_time = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+        frame_queue_check_time = duration.count();
+        total_queue_check_time += frame_queue_check_time;
+
+        if (queue_not_full) {
+            // Measure YUV frame read time
+            start_time = std::chrono::high_resolution_clock::now();
+            cv::Mat img = readYUV420Frame(yuv_video);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_read_time = duration.count();
+            total_read_time += frame_read_time;
+
+            if (img.empty()) {
+                std::cout << "End of YUV video." << std::endl;
+                is_reading = false;
+                break;
+            }
+
+            // Measure mutex lock time
+            start_time = std::chrono::high_resolution_clock::now();
+            mtx_read_queue.lock();
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_mutex_lock_time = duration.count();
+            total_mutex_lock_time += frame_mutex_lock_time;
+
+            // Measure queue push time
+            start_time = std::chrono::high_resolution_clock::now();
+            read_queue.push(make_pair(read_index++, img));
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_queue_push_time = duration.count();
+            total_queue_push_time += frame_queue_push_time;
+
+            // Measure mutex unlock time
+            start_time = std::chrono::high_resolution_clock::now();
+            mtx_read_queue.unlock();
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_mutex_unlock_time = duration.count();
+            total_mutex_unlock_time += frame_mutex_unlock_time;
+
+            frame_count++;
+
+            // Print timing information for this frame
+            auto frame_end_time = std::chrono::high_resolution_clock::now();
+            auto frame_total_duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(frame_end_time - frame_start_time);
+            std::cout << "Read Frame " << frame_count << " timings:" << std::endl;
+            std::cout << "  Queue check: " << frame_queue_check_time << " µs" << std::endl;
+            std::cout << "  Read: " << frame_read_time << " µs" << std::endl;
+            std::cout << "  Mutex lock: " << frame_mutex_lock_time << " µs" << std::endl;
+            std::cout << "  Queue push: " << frame_queue_push_time << " µs" << std::endl;
+            std::cout << "  Mutex unlock: " << frame_mutex_unlock_time << " µs" << std::endl;
+            std::cout << "  Total frame time: " << frame_total_duration.count() << " µs" << std::endl;
+        } else {
+            // Measure sleep time
+            start_time = std::chrono::high_resolution_clock::now();
+            usleep(20);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            frame_sleep_time = duration.count();
+            total_sleep_time += frame_sleep_time;
+            sleep_count++;
+        }
+    }
+
+    // Print final statistics
+    std::cout << "Read function final statistics:" << std::endl;
+    std::cout << "  Total frames processed: " << frame_count << std::endl;
+    std::cout << "  Average queue check time: " << total_queue_check_time / frame_count << " µs" << std::endl;
+    std::cout << "  Average read time: " << total_read_time / frame_count << " µs" << std::endl;
+    std::cout << "  Average mutex lock time: " << total_mutex_lock_time / frame_count << " µs" << std::endl;
+    std::cout << "  Average queue push time: " << total_queue_push_time / frame_count << " µs" << std::endl;
+    std::cout << "  Average mutex unlock time: " << total_mutex_unlock_time / frame_count << " µs" << std::endl;
+    std::cout << "  Average sleep time: " << (sleep_count > 0 ? total_sleep_time / sleep_count : 0) << " µs" << std::endl;
+    std::cout << "  Total sleep count: " << sleep_count << std::endl;
 }
 
 /**
@@ -118,44 +220,46 @@ void Read(bool& is_reading) {
  * @return none
  */
 void Display(bool& is_displaying) {
-    // Create a named window for displaying the video analysis
-    cv::namedWindow("Video Analysis", cv::WINDOW_NORMAL);
-    // Resize the window to 1280x720 pixels
-    cv::resizeWindow("Video Analysis", 1280, 720);
+    std::chrono::high_resolution_clock::time_point start_time, end_time;
+    std::chrono::duration<double, std::micro> duration;
+    
+    double total_window_creation_time = 0.0;
+    double total_queue_check_time = 0.0;
+    double total_frame_processing_time = 0.0;
+    double total_imshow_time = 0.0;
+    double total_waitkey_time = 0.0;
+    int frame_count = 0;
 
-    // Variable to store the last frame time for FPS calculation
+    // Measure window creation time
+    start_time = std::chrono::high_resolution_clock::now();
+    cv::namedWindow("Video Analysis", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Video Analysis", 720, 360);
+    end_time = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+    total_window_creation_time = duration.count();
+
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
-    // Continue displaying frames as long as is_displaying is true
     while (is_displaying) {
-        // Lock the mutex to safely access the shared display_queue
+        start_time = std::chrono::high_resolution_clock::now();
         mtx_display_queue.lock();
+        bool queue_empty = display_queue.empty();
+        mtx_display_queue.unlock();
+        end_time = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+        total_queue_check_time += duration.count();
         
-        if (display_queue.empty()) {
-            // If the display queue is empty, check if processing is still ongoing
-            if (std::any_of(is_running.begin(), is_running.end(), [](bool v) { return v; }) || is_reading) {
-                // If processing is ongoing, unlock the mutex and wait for a short time
-                mtx_display_queue.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-                continue;
-            } else {
-                // If processing is finished and queue is empty, end the display loop
-                is_displaying = false;
-                mtx_display_queue.unlock();
-                break;
-            }
-        } else {
-            // If there are frames to display, get the top frame from the queue
+        if (!queue_empty) {
+            start_time = std::chrono::high_resolution_clock::now();
+            mtx_display_queue.lock();
             auto current_frame = display_queue.top();
             display_queue.pop();
             mtx_display_queue.unlock();
 
-            // Calculate current FPS
             auto currentTime = std::chrono::high_resolution_clock::now();
             double fps = 1.0 / std::chrono::duration<double>(currentTime - lastFrameTime).count();
             lastFrameTime = currentTime;
 
-            // Display current FPS on the frame
             cv::putText(current_frame.second, 
                         "FPS: " + std::to_string(int(fps)), 
                         cv::Point(10, 30), 
@@ -163,16 +267,59 @@ void Display(bool& is_displaying) {
                         1, 
                         cv::Scalar(0, 255, 0), 
                         2);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            total_frame_processing_time += duration.count();
 
-            // Display the frame
+            start_time = std::chrono::high_resolution_clock::now();
             cv::imshow("Video Analysis", current_frame.second);
-
-            int key = cv::waitKey(30);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            total_imshow_time += duration.count();
             
+            start_time = std::chrono::high_resolution_clock::now();
+            int key = cv::waitKey(30);
+            end_time = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(end_time - start_time);
+            total_waitkey_time += duration.count();
+
+            if (key == 'q' || key == 27) {  // 'q' or ESC key
+                is_displaying = false;
+                is_reading = false;
+                for (auto& running : is_running) {
+                    running = false;
+                }
+                break;
+            }
+
+            frame_count++;
+
+            // Print timing information for this frame
+            cout << "Display Frame " << frame_count << " timings:" << endl;
+            cout << "  Queue check: " << total_queue_check_time / frame_count << " µs" << endl;
+            cout << "  Frame processing: " << total_frame_processing_time / frame_count << " µs" << endl;
+            cout << "  ImShow: " << total_imshow_time / frame_count << " µs" << endl;
+            cout << "  WaitKey: " << total_waitkey_time / frame_count << " µs" << endl;
+            cout << "  FPS: " << fps << endl;
+        } else {
+            if (std::any_of(is_running.begin(), is_running.end(), [](bool v) { return v; }) || is_reading) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            } else {
+                is_displaying = false;
+                break;
+            }
         }
     }
 
-    // Close all OpenCV windows when display loop ends
+    // Print final statistics
+    cout << "Display function final statistics:" << endl;
+    cout << "  Window creation time: " << total_window_creation_time << " µs" << endl;
+    cout << "  Total frames displayed: " << frame_count << endl;
+    cout << "  Average queue check time: " << total_queue_check_time / frame_count << " µs" << endl;
+    cout << "  Average frame processing time: " << total_frame_processing_time / frame_count << " µs" << endl;
+    cout << "  Average ImShow time: " << total_imshow_time / frame_count << " µs" << endl;
+    cout << "  Average WaitKey time: " << total_waitkey_time / frame_count << " µs" << endl;
+
     cv::destroyAllWindows();
 }
 
@@ -375,146 +522,191 @@ void applyNMS(const std::vector<std::vector<float>>& boxes, const std::vector<fl
 }
 
 void RunFaceDetect(vart::Runner* runner, bool& is_running) {
-    // Get tensors
-    auto outputTensors = runner->get_output_tensors();
-    auto inputTensors = runner->get_input_tensors();
-    auto out_dims = outputTensors[0]->get_shape();
-    auto in_dims = inputTensors[0]->get_shape();
+  std::cout << "Face Detection Thread Started\n";
 
-    // Get scales
-    auto input_scale = get_input_scale(inputTensors[0]);
-    auto output_scale = get_output_scale(outputTensors[0]);
+  // Get tensors
+  auto outputTensors = runner->get_output_tensors();
+  auto inputTensors = runner->get_input_tensors();
+  auto out_dims = outputTensors[0]->get_shape();
+  auto in_dims = inputTensors[0]->get_shape();
 
-    // Set up sizes
-    int outSize = out_dims[1] * out_dims[2] * out_dims[3];
-    int inSize = in_dims[1] * in_dims[2] * in_dims[3];
-    int inHeight = in_dims[1];
-    int inWidth = in_dims[2];
-    int batchSize = in_dims[0];
+  // Get scales
+  auto input_scale = get_input_scale(inputTensors[0]);
+  auto output_scale = get_output_scale(outputTensors[0]);
 
-    // Allocate memory for input images and results
-    int8_t* imageInputs = new int8_t[inSize * batchSize];
-    int8_t* FCResult = new int8_t[batchSize * outSize];
+  // Set up sizes
+  int outSize = out_dims[1] * out_dims[2] * out_dims[3];
+  int inSize = in_dims[1] * in_dims[2] * in_dims[3];
+  int inHeight = in_dims[1];
+  int inWidth = in_dims[2];
+  int batchSize = in_dims[0];
 
-    // Allocate memory for prediction scores
-    float* pred = new (std::nothrow) float[out_dims[1] * out_dims[2] * 2];
-    if (!pred) {
-        std::cerr << "Failed to allocate memory for pred" << std::endl;
-        delete[] imageInputs;
-        delete[] FCResult;
-        return;
-    }
+  // Allocate memory for input images and results
+  int8_t* imageInputs = new int8_t[inSize * batchSize];
+  int8_t* FCResult = new int8_t[batchSize * outSize];
 
-    // Set up mean and scale values for image preprocessing
-    std::vector<float> mean = {128.0f, 128.0f, 128.0f};
-    std::vector<float> scale = {1.0f, 1.0f, 1.0f};
-
-    // Main processing loop
-    while (is_running) {
-        // Get an image from read queue
-        int index;
-        cv::Mat img;
-        mtx_read_queue.lock();
-        if (read_queue.empty()) {
-          mtx_read_queue.unlock();
-          if (is_reading) {
-            continue;
-          } else {
-            is_running = false;
-            break;
-          }
-        } else {
-          index = read_queue.front().first;
-          img = read_queue.front().second;
-          read_queue.pop();
-          mtx_read_queue.unlock();
-        }
-
-        // Resize image to match model input dimensions
-        cv::Mat resized;
-        cv::resize(img, resized, cv::Size(inWidth, inHeight));
-
-        // Prepare input data (Preprocessing)
-        setImageBGR({resized}, runner, imageInputs, mean, scale);
-
-        // Set up input and output tensors for model execution
-        std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
-        std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
-        
-        inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs, inputTensors[0]));
-        outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult, outputTensors[0]));
-        inputsPtr.push_back(inputs[0].get());
-        outputsPtr.push_back(outputs[0].get());
-
-        // Run DPU
-        auto job_id = runner->execute_async(inputsPtr, outputsPtr);
-        auto status = runner->wait(job_id.first, -1);
-        CHECK_EQ(status, 0) << "failed to run dpu";
-
-        // Set detection and NMS thresholds
-        const float det_threshold = 0.9f;
-        const float nms_threshold = 0.3f;
-        
-        // Calculate prediction scores
-        for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
-            pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);  // background score
-            pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;   // face score
-        }    
-
-        // Apply filtering to get potential face bounding boxes
-        std::vector<std::vector<float>> boxes = FilterBox(
-            output_scale,  // bb_out_scale
-            det_threshold,
-            FCResult,      // bbout
-            out_dims[2],   // width
-            out_dims[1],   // height
-            pred           // pred
-        );
-
-        // Extract scores from boxes
-        std::vector<float> scores;
-        for (auto& box : boxes) {
-            scores.push_back(box[4]);
-        }
-
-        // Apply Non-Maximum Suppression (NMS)
-        std::vector<size_t> res_k;
-        int max_faces = 1; // Limit to 1 face, adjust as needed
-        applyNMS(boxes, scores, nms_threshold, det_threshold, res_k, max_faces);
-
-        // Create FaceDetectResult structure with detected face rectangles
-        FaceDetectResult result{inWidth, inHeight};
-        for (auto& k : res_k) {
-            result.rects.push_back(FaceDetectResult::BoundingBox{
-                boxes[k][0] / inWidth,
-                boxes[k][1] / inHeight,
-                (boxes[k][2] - boxes[k][0]) / inWidth,
-                (boxes[k][3] - boxes[k][1]) / inHeight,
-                boxes[k][4]
-            });
-        }
-
-        // Store the result in the shared structure
-        {
-            std::lock_guard<std::mutex> lock(sharedResults.mutex);
-            sharedResults.results.push_back(result);
-            sharedResults.frame = img.clone();
-            sharedResults.frame_index = index;
-            sharedResults.cv.notify_one();  //waiting thread하나를 wake up 시킴
-        }
-    }
-
-    // Signal that face detection is finished
-    {
-        std::lock_guard<std::mutex> lock(sharedResults.mutex);
-        sharedResults.finished = true;
-    }
-    sharedResults.cv.notify_all();  //모든 waiting thread를 wake up 시킴
-
-    // Clean up allocated memory
+  // Allocate memory for prediction scores
+  float* pred = new (std::nothrow) float[out_dims[1] * out_dims[2] * 2];
+  if (!pred) {
+    std::cerr << "Failed to allocate memory for pred" << std::endl;
     delete[] imageInputs;
     delete[] FCResult;
-    delete[] pred;
+    return;
+  }
+
+  // Set up mean and scale values for image preprocessing
+  std::vector<float> mean = {128.0f, 128.0f, 128.0f};
+  std::vector<float> scale = {1.0f, 1.0f, 1.0f};
+
+  // Timing variables
+  auto total_start_time = std::chrono::high_resolution_clock::now();
+  int frame_count = 0;
+  double total_latency = 0.0;
+  
+  // Main processing loop
+  while (is_running) {
+    auto frame_start_time = std::chrono::high_resolution_clock::now();
+    
+    // Get an image from read queue
+    int index;
+    cv::Mat img;
+    
+    auto queue_start = std::chrono::high_resolution_clock::now();
+    mtx_read_queue.lock();
+    if (read_queue.empty()) {
+      mtx_read_queue.unlock();
+      if (is_reading) {
+        continue;
+      } else {
+        is_running = false;
+        break;
+      }
+    } else {
+      index = read_queue.front().first;
+      img = read_queue.front().second;
+      read_queue.pop();
+      mtx_read_queue.unlock();
+    }
+    auto queue_end = std::chrono::high_resolution_clock::now();
+    auto queue_duration = std::chrono::duration_cast<std::chrono::microseconds>(queue_end - queue_start);
+
+    // Resize image to match model input dimensions
+    auto resize_start = std::chrono::high_resolution_clock::now();
+    cv::Mat resized;
+    cv::resize(img, resized, cv::Size(inWidth, inHeight));
+    auto resize_end = std::chrono::high_resolution_clock::now();
+    auto resize_duration = std::chrono::duration_cast<std::chrono::microseconds>(resize_end - resize_start);
+
+    // Prepare input data (Preprocessing)
+    auto preprocess_start = std::chrono::high_resolution_clock::now();
+    setImageBGR({resized}, runner, imageInputs, mean, scale);
+    auto preprocess_end = std::chrono::high_resolution_clock::now();
+    auto preprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(preprocess_end - preprocess_start);
+
+    // Set up input and output tensors for model execution
+    std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
+    std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
+    
+    inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs, inputTensors[0]));
+    outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult, outputTensors[0]));
+    inputsPtr.push_back(inputs[0].get());
+    outputsPtr.push_back(outputs[0].get());
+
+    // Run DPU
+    auto dpu_start = std::chrono::high_resolution_clock::now();
+    auto job_id = runner->execute_async(inputsPtr, outputsPtr);
+    auto status = runner->wait(job_id.first, -1);
+    CHECK_EQ(status, 0) << "failed to run dpu";
+    auto dpu_end = std::chrono::high_resolution_clock::now();
+    auto dpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(dpu_end - dpu_start);
+
+    // Set detection and NMS thresholds
+    const float det_threshold = 0.9f;
+    const float nms_threshold = 0.3f;
+    
+    // Calculate prediction scores
+    auto postprocess_start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
+      pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);  // background score
+      pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;   // face score
+    }    
+
+    // Apply filtering to get potential face bounding boxes
+    std::vector<std::vector<float>> boxes = FilterBox(
+        output_scale,  // bb_out_scale
+        det_threshold,
+        FCResult,      // bbout
+        out_dims[2],   // width
+        out_dims[1],   // height
+        pred           // pred
+    );
+
+    // Extract scores from boxes
+    std::vector<float> scores;
+    for (auto& box : boxes) {
+      scores.push_back(box[4]);
+    }
+
+    // Apply Non-Maximum Suppression (NMS)
+    std::vector<size_t> res_k;
+    int max_faces = 1; // Adjust as needed
+    applyNMS(boxes, scores, nms_threshold, det_threshold, res_k, max_faces);
+
+    // Create FaceDetectResult structure with detected face rectangles
+    FaceDetectResult result{inWidth, inHeight};
+    for (auto& k : res_k) {
+      result.rects.push_back(FaceDetectResult::BoundingBox{
+          boxes[k][0] / inWidth,
+          boxes[k][1] / inHeight,
+          (boxes[k][2] - boxes[k][0]) / inWidth,
+          (boxes[k][3] - boxes[k][1]) / inHeight,
+          boxes[k][4]
+      });
+    }
+    auto postprocess_end = std::chrono::high_resolution_clock::now();
+    auto postprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(postprocess_end - postprocess_start);
+
+    // Store the result in the shared structure
+    auto store_start = std::chrono::high_resolution_clock::now();
+    {
+      std::lock_guard<std::mutex> lock(sharedResults.mutex);
+      sharedResults.results.push_back(result);
+      sharedResults.frame = img.clone();
+      sharedResults.frame_index = index;
+      sharedResults.cv.notify_one();
+    }
+    auto store_end = std::chrono::high_resolution_clock::now();
+    auto store_duration = std::chrono::duration_cast<std::chrono::microseconds>(store_end - store_start);
+
+    auto frame_end_time = std::chrono::high_resolution_clock::now();
+    auto frame_duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end_time - frame_start_time);
+    
+    frame_count++;
+    total_latency += frame_duration.count();
+
+    std::cout << "Face Detection latency for frame " << frame_count << ": " << frame_duration.count() << " ms" << std::endl;
+    std::cout << "  Queue: " << queue_duration.count() << " µs" << std::endl;
+    std::cout << "  Resize: " << resize_duration.count() << " µs" << std::endl;
+    std::cout << "  Preprocess: " << preprocess_duration.count() << " µs" << std::endl;
+    std::cout << "  DPU execution: " << dpu_duration.count() << " µs" << std::endl;
+    std::cout << "  Postprocess: " << postprocess_duration.count() << " µs" << std::endl;
+    std::cout << "  Store results: " << store_duration.count() << " µs" << std::endl;
+  }
+
+  auto total_end_time = std::chrono::high_resolution_clock::now();
+  auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(total_end_time - total_start_time);
+  double average_latency = total_latency / frame_count;
+  
+  std::cout << "Total Face Detection frames processed: " << frame_count << std::endl;
+  std::cout << "Face Detection - Average latency: " << average_latency << " ms" << std::endl;
+  std::cout << "Face Detection - Total runtime: " << total_duration.count() << " ms" << std::endl;
+
+  // Clean up allocated memory
+  delete[] imageInputs;
+  delete[] FCResult;
+  delete[] pred;
+
+  std::cout << "Face Detection Thread Finished\n";
 }
 
 /* Run Facerecog */
@@ -585,11 +777,15 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
   std::cout << "Face Recognition Thread Started\n";
 
   // Load pre-computed embeddings
+  auto embeddings_start = std::chrono::high_resolution_clock::now();
   std::vector<std::vector<float>> embedding_arr;
   std::vector<float> embedding_norm_arr;
   std::vector<std::string> embedding_class_arr;
   auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
   std::tie(embedding_arr, embedding_norm_arr, embedding_class_arr) = load_embeddings(embeddings_npzpath);
+  auto embeddings_end = std::chrono::high_resolution_clock::now();
+  auto embeddings_duration = std::chrono::duration_cast<std::chrono::milliseconds>(embeddings_end - embeddings_start);
+  std::cout << "Embeddings loading time: " << embeddings_duration.count() << " ms" << std::endl;
 
   // Get model input and output details 
   auto outputTensors = runner->get_output_tensors();
@@ -608,17 +804,25 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
   std::vector<float> mean = {128.0f, 128.0f, 128.0f};
   std::vector<float> scale = {0.0078125f, 0.0078125f, 0.0078125f};
 
+  // Timing variables
+  auto total_start_time = std::chrono::high_resolution_clock::now();
+  int frame_count = 0;
+  double total_latency = 0.0;
+
   while (is_running) {
+    auto frame_start_time = std::chrono::high_resolution_clock::now();
+
     FaceDetectResult faceDetectResult;
     cv::Mat frame;
     int frame_index;
     bool have_result = false;
 
     // Acquire lock and wait for results or finish signal
+    auto wait_start = std::chrono::high_resolution_clock::now();
     {
       std::unique_lock<std::mutex> lock(sharedResults.mutex);
       sharedResults.cv.wait(lock, [&]{
-        return !sharedResults.results.empty() || sharedResults.finished;  //lamda function returns true when 'not empty' or 'finished'
+        return !sharedResults.results.empty() || sharedResults.finished;
       });
 
       // Check if we're finished and no more results
@@ -635,9 +839,12 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         have_result = true;
       }
     }
+    auto wait_end = std::chrono::high_resolution_clock::now();
+    auto wait_duration = std::chrono::duration_cast<std::chrono::microseconds>(wait_end - wait_start);
 
-    // If we have a result, process it
     if (have_result) {
+      // Crop faces
+      auto crop_start = std::chrono::high_resolution_clock::now();
       std::vector<cv::Mat> croppedFaces;
       for (const auto &r : faceDetectResult.rects) {
         cv::Mat cropped_img = frame(cv::Rect(r.x * frame.cols, r.y * frame.rows,
@@ -646,12 +853,16 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         cv::resize(cropped_img, resized_img, cv::Size(inWidth, inHeight));
         croppedFaces.push_back(resized_img);
       }
+      auto crop_end = std::chrono::high_resolution_clock::now();
+      auto crop_duration = std::chrono::duration_cast<std::chrono::microseconds>(crop_end - crop_start);
 
+      auto process_start = std::chrono::high_resolution_clock::now();
       for (size_t i = 0; i < croppedFaces.size(); ++i) {
         std::vector<int8_t> imageInputs(inSize * batchSize, 0);
         std::vector<int8_t> FCResult(batchSize * outSize, 0);
 
         // Convert image to input format
+        auto preprocess_start = std::chrono::high_resolution_clock::now();
         for (int h = 0; h < inHeight; h++) {
           for (int w = 0; w < inWidth; w++) {
             for (int c = 0; c < 3; c++) {
@@ -661,6 +872,8 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
             }
           }
         }
+        auto preprocess_end = std::chrono::high_resolution_clock::now();
+        auto preprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(preprocess_end - preprocess_start);
 
         // Prepare input and output tensors
         std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
@@ -672,14 +885,18 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         outputsPtr.push_back(outputs[0].get());
 
         // Execute the DPU
+        auto dpu_start = std::chrono::high_resolution_clock::now();
         auto job_id = runner->execute_async(inputsPtr, outputsPtr);
         auto status = runner->wait(job_id.first, -1);
         if (status != 0) {
           std::cerr << "DPU execution failed with status " << status << std::endl;
           continue;
         }
+        auto dpu_end = std::chrono::high_resolution_clock::now();
+        auto dpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(dpu_end - dpu_start);
 
         // Post-processing and face recognition 
+        auto postprocess_start = std::chrono::high_resolution_clock::now();
         std::vector<float> float_output(outSize);
         for (int j = 0; j < outSize; ++j) {
           float_output[j] = static_cast<float>(FCResult[j]) * output_scale;
@@ -699,8 +916,11 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         if (max_similarity_index != -1 && max_similarity > 0.6) {
           recognized_label = embedding_class_arr[max_similarity_index];
         }
+        auto postprocess_end = std::chrono::high_resolution_clock::now();
+        auto postprocess_duration = std::chrono::duration_cast<std::chrono::microseconds>(postprocess_end - postprocess_start);
 
         // Draw bounding box and label on the frame
+        auto draw_start = std::chrono::high_resolution_clock::now();
         const auto& r = faceDetectResult.rects[i];
         cv::rectangle(frame, cv::Rect(r.x * frame.cols, r.y * frame.rows,
                                       r.width * frame.cols, r.height * frame.rows),
@@ -708,17 +928,49 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
         cv::putText(frame, recognized_label,
                     cv::Point(r.x * frame.cols, r.y * frame.rows - 10),
                     cv::FONT_HERSHEY_SIMPLEX, 0.9, cv::Scalar(0, 255, 0), 2);
+        auto draw_end = std::chrono::high_resolution_clock::now();
+        auto draw_duration = std::chrono::duration_cast<std::chrono::microseconds>(draw_end - draw_start);
 
-        std::cout << "Recognized face: " << recognized_label << " (Similarity: " << max_similarity << ")" << std::endl;
+        std::cout << "Face " << i+1 << " Recognition timings:" << std::endl;
+        std::cout << "  Preprocess: " << preprocess_duration.count() << " µs" << std::endl;
+        std::cout << "  DPU execution: " << dpu_duration.count() << " µs" << std::endl;
+        std::cout << "  Postprocess: " << postprocess_duration.count() << " µs" << std::endl;
+        std::cout << "  Drawing: " << draw_duration.count() << " µs" << std::endl;
+        std::cout << "  Recognized as: " << recognized_label << " (Similarity: " << max_similarity << ")" << std::endl;
       }
+      auto process_end = std::chrono::high_resolution_clock::now();
+      auto process_duration = std::chrono::duration_cast<std::chrono::microseconds>(process_end - process_start);
 
       // Put processed frame into display queue
+      auto display_start = std::chrono::high_resolution_clock::now();
       mtx_display_queue.lock();
       display_queue.push(std::make_pair(frame_index, frame));
       mtx_display_queue.unlock();
+      auto display_end = std::chrono::high_resolution_clock::now();
+      auto display_duration = std::chrono::duration_cast<std::chrono::microseconds>(display_end - display_start);
+
+      auto frame_end_time = std::chrono::high_resolution_clock::now();
+      auto frame_duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end_time - frame_start_time);
+    
+      frame_count++;
+      total_latency += frame_duration.count();
+
+      std::cout << "Face Recognition latency for frame " << frame_count << ": " << frame_duration.count() << " ms" << std::endl;
+      std::cout << "  Wait for result: " << wait_duration.count() << " µs" << std::endl;
+      std::cout << "  Crop faces: " << crop_duration.count() << " µs" << std::endl;
+      std::cout << "  Process faces: " << process_duration.count() << " µs" << std::endl;
+      std::cout << "  Add to display queue: " << display_duration.count() << " µs" << std::endl;
     }
   }
 
+  auto total_end_time = std::chrono::high_resolution_clock::now();
+  auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(total_end_time - total_start_time);
+  double average_latency = total_latency / frame_count;
+
+  std::cout << "Face Recognition - Total frames processed:" << frame_count << std::flush;
+  std::cout << "Face Recognition - Average latency: " << average_latency << " ms" << std::flush;
+  std::cout << "Face Recognition - Total runtime: " << total_duration.count() << " ms" << std::flush;
+  
   std::cout << "Face Recognition Thread Finished\n";
 }
 
@@ -729,31 +981,41 @@ void runFacerecog(vart::Runner* runner, bool& is_running) {
  *
  */
 int main(int argc, char** argv) {
-  // Check args
-  if (argc != 4) {
-    cout << "Usage of video analysis demo: ./video_analysis [video_file] "
-            "[fd_model_file]" "[fr_model_file]"
-         << endl;
-    return -1;
-  }
+    // Check args
+    // if (argc != 6) {
+    //     std::cout << "Usage: ./video_analysis [yuv_file] [width] [height] [fps] "
+    //                  "[fd_model_file] [fr_model_file]" << std::endl;
+    //     return -1;
+    // }
 
   //모델 path
-  argv[1] = "/home/root/VART/video_fd_fr/all5_720p.mp4";
-  argv[2] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
-  argv[3] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
+
+  // Initialize YUV video
+  yuv_video.width = std::stoi(argv[2]);
+  yuv_video.height = std::stoi(argv[3]);
+  yuv_video.fps = std::stoi(argv[4]);
+  yuv_video.file.open(argv[1], std::ios::binary);
+
+  argv[1] = "/home/root/VART/video_fd_fr/all5_640x360.yuv";
+  argv[2] = "640";
+  argv[3] = "360";
+  argv[4] = "60";
+  argv[5] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
+  argv[6] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
 
   // Initialize video capture
-  string file_name = argv[1];
-  cout << "Detect video: " << file_name << endl;
-  video.open(file_name);
-  if (!video.isOpened()) {
-    cout << "Failed to open video: " << file_name;
-    return -1;
-  }
+    if (!yuv_video.file.is_open()) {
+        std::cout << "Failed to open YUV file: " << argv[1] << std::endl;
+        return -1;
+    }
+
+    std::cout << "Processing YUV video: " << argv[1] << std::endl;
+    std::cout << "Resolution: " << yuv_video.width << "x" << yuv_video.height << std::endl;
+    std::cout << "FPS: " << yuv_video.fps << std::endl;
 
   // Load the face detection and face recognition models
-  auto graph_fd = xir::Graph::deserialize(argv[2]);
-  auto graph_fr = xir::Graph::deserialize(argv[3]);
+  auto graph_fd = xir::Graph::deserialize(argv[5]);
+  auto graph_fr = xir::Graph::deserialize(argv[6]);
 
   // Extract the DPU subgraphs from the loaded models
   auto subgraph_fd = get_dpu_subgraph(graph_fd.get());
@@ -823,11 +1085,12 @@ int main(int argc, char** argv) {
   
 
   // 모든 스레드가 완료될 때까지 대기
-  for (auto& t : threads) {
-      t.join();
+  // TNUM(6)개의 SSD 스레드 + 읽기 스레드 + 표시 스레드 = 총 8개 스레드 
+  for (int i = 0; i < 2 + TNUM; ++i) {
+    threads[i].join();
   }
 
   // 비디오 리소스 해제
-  video.release();
+  yuv_video.file.close();
   return 0;
 }
