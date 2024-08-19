@@ -31,7 +31,9 @@
 #include <deque>
 #include <condition_variable>
 #include <cnpy.h>
-
+#include <chrono>
+#include <sstream>
+#include <sys/resource.h>
 
 // Header file OpenCV for image processing
 #include <opencv2/opencv.hpp>
@@ -74,6 +76,33 @@ int display_index = 0;    // frame index to display
 
 GraphInfo shapes;
 
+// VCU 인터럽트 카운터를 읽는 함수
+unsigned long long get_vcu_interrupts() {
+    std::ifstream file("/proc/interrupts");
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.find("xlnx_vcu") != std::string::npos) {
+            std::istringstream iss(line);
+            unsigned long long total = 0;
+            unsigned long long value;
+            iss >> value; // 첫 번째 값(IRQ 번호)은 건너뜁니다.
+            while (iss >> value) {
+                total += value;
+            }
+            return total;
+        }
+    }
+    return 0;
+}
+
+// CPU 시간을 마이크로초 단위로 얻는 함수
+long long get_cpu_time() {
+    struct rusage usage;
+    getrusage(RUSAGE_THREAD, &usage);
+    return (usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000000LL +
+           (usage.ru_utime.tv_usec + usage.ru_stime.tv_usec);
+}
+
 /**
  * @brief Read frames into read queue from a video
  *
@@ -90,8 +119,26 @@ void Read(bool& is_reading) {
 
     //read_queue size가 30미만인 경우에만 new frame을 읽음
     if (read_queue.size() < 30) {
+      auto start_time = std::chrono::high_resolution_clock::now();
+      auto start_cpu_time = get_cpu_time();
+      auto start_vcu_interrupts = get_vcu_interrupts();
+
+      bool success = video.read(img);
+
+      auto end_time = std::chrono::high_resolution_clock::now();
+      auto end_cpu_time = get_cpu_time();
+      auto end_vcu_interrupts = get_vcu_interrupts();
+
+      auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+      auto cpu_time_used = end_cpu_time - start_cpu_time;
+      auto vcu_interrupts_count = end_vcu_interrupts - start_vcu_interrupts;
+
+      std::cout << "video.read(img) execution time: " << duration.count() << " microseconds" << std::endl;
+      std::cout << "CPU time used: " << cpu_time_used << " microseconds" << std::endl;
+      std::cout << "VCU interrupts: " << vcu_interrupts_count << std::endl;
+
       //video에서 new frame 읽기 시도
-      if (!video.read(img)) {
+      if (!success) {
         //더이상 읽을 frame이 없으면 비디오 종료
         cout << "Video end." << endl;
         is_reading = false;
