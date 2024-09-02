@@ -13,163 +13,240 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//rev2
-#include <assert.h>
-#include <dirent.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <cnpy.h>
+//rev1
 
-#include <cassert>
+#include <unistd.h>
+
+#include <algorithm>
+#include <chrono>
 #include <cmath>
-#include <cstdio>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
+#include <mutex>
 #include <queue>
 #include <string>
+#include <thread>
 #include <vector>
+#include <numeric>
+#include <deque>
+#include <condition_variable>
+#include <cnpy.h>
+#include <atomic>
+
+// Header file OpenCV for image processing
+#include <opencv2/opencv.hpp>
 
 #include "common.h"
-/* header file OpenCV for image processing */
-#include <opencv2/opencv.hpp>
 
 using namespace std;
 using namespace cv;
 
+const int TNUM = 2; //쓰래드 돌릴 갯수, FD하나만 할 때는 1
+
+//For calculating FPS
+const int FPS_QUEUE_SIZE = 30;  // Number of frames to average for FPS calculation
+std::deque<double> fpsQueue;
+std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
+
+// input video
+VideoCapture video;
+
+// flags for each thread
+bool is_reading = true;
+array<bool, TNUM> is_running;
+bool is_displaying = true;
+
+// comparison algorithm for priority_queue
+class Compare {
+ public:
+  bool operator()(const pair<int, Mat>& n1, const pair<int, Mat>& n2) const {
+    return n1.first > n2.first;
+  }
+};
+
+queue<pair<int, Mat>> read_queue;  // read queue
+priority_queue<pair<int, Mat>, vector<pair<int, Mat>>, Compare>
+    display_queue;        // display queue
+mutex mtx_read_queue;     // mutex of read queue
+mutex mtx_display_queue;  // mutex of display queue
+int read_index = 0;       // frame index of input video
+int display_index = 0;    // frame index to display
+
 GraphInfo shapes;
 
-const string baseImagePath = "../images/";
-const string wordsPath = "./";
+//전역변수로 실행 횟수 추적할 atomic 변수 추가
+std::atomic<int> Read_count(0);
+std::atomic<int> Display_count(0);
+std::atomic<int> fd_pre_count(0);
+std::atomic<int> fd_inf_count(0);
+std::atomic<int> fd_post_count(0);
+std::atomic<int> fr_pre_count(0);
+std::atomic<int> fr_inf_count(0);
+std::atomic<int> fr_post_count(0);
+std::atomic<int> face_detect_count(0);
+std::atomic<int> face_recog_count(0);
+
+//Program start time
+std::chrono::steady_clock::time_point program_start_time; //time since last reboot
+
+//Time duration to string
+std::string format_duration(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start); //cal time duration
+    long long total_ms = duration.count();  //got ms as long long
+    int ms = total_ms % 1000; //0-999 ms
+    int seconds = (total_ms / 1000) % 60; //s
+    int minutes = (total_ms / (1000 * 60)) % 60;  //m
+    
+    std::stringstream ss;
+    ss << std::setfill('0') << std::setw(2) << minutes << ":"
+       << std::setfill('0') << std::setw(2) << seconds << "." 
+       << std::setfill('0') << std::setw(3) << ms;
+    return ss.str();
+}
 
 /**
- * @brief put image names to a vector
+ * @brief Read frames into read queue from a video
  *
- * @param path - path of the image direcotry
- * @param images - the vector of image name
+ * @param is_reading - status flag of Read thread
  *
  * @return none
  */
+//비디오를 읽어서 frame을 저장하는 함수
+void Read(bool& is_reading) {
+  //is_reading이 true인 동안 계속 실행
+  while (is_reading) {
+    int current_count = ++Read_count;
+    auto start_time = std::chrono::steady_clock::now();
+    std::cout << "Read #" << current_count << " started at: " 
+              << format_duration(program_start_time, start_time) << std::endl;
+    //video frame을 저장할 Mat 객체 선언
+    Mat img;
 
- //얼굴 검출 결과를 저장할 구조체 정의
- struct FaceDetectResult {
-   struct BoundingBox {
-     float x;
-     float y;
-     float width;
-     float height;
-     float score;
-   };
-   int width;
-   int height;
-   std::vector<BoundingBox> rects;
- };
-
-void ListImages(string const& path, vector<string>& images) {
-  images.clear();
-  struct dirent* entry;
-
-  /*Check if path is a valid directory path. */
-  struct stat s;
-  lstat(path.c_str(), &s);
-  if (!S_ISDIR(s.st_mode)) {
-    fprintf(stderr, "Error: %s is not a valid directory!\n", path.c_str());
-    exit(1);
-  }
-
-  DIR* dir = opendir(path.c_str());
-  if (dir == nullptr) {
-    fprintf(stderr, "Error: Open %s path failed.\n", path.c_str());
-    exit(1);
-  }
-
-  while ((entry = readdir(dir)) != nullptr) {
-    if (entry->d_type == DT_REG || entry->d_type == DT_UNKNOWN) {
-      string name = entry->d_name;
-      string ext = name.substr(name.find_last_of(".") + 1);
-      if ((ext == "JPEG") || (ext == "jpeg") || (ext == "JPG") ||
-          (ext == "jpg") || (ext == "PNG") || (ext == "png")) {
-        images.push_back(name);
+    //read_queue size가 30미만인 경우에만 new frame을 읽음
+    if (read_queue.size() < 30) {
+      //video에서 new frame 읽기 시도
+      if (!video.read(img)) {
+        //더이상 읽을 frame이 없으면 비디오 종료
+        cout << "Video end." << endl;
+        is_reading = false;
+        break;
       }
+      //read_queue에 접근하기 위해 mutex 잠금
+      mtx_read_queue.lock();
+      //읽은 frame을 index와 함께 대기열에 추가
+      //read_index는 각 frame에 고유번호를 부여하고, 추가 후 증가
+      read_queue.push(make_pair(read_index++, img));  //End of the read_queue에 (index, img)를 추가
+      //mutex 잠금 해제
+      mtx_read_queue.unlock();
+    } else {
+      //대기열이 가득 찼을 경우(30개 이상의 frame)
+      //20us동안 대기
+      usleep(20);
     }
-  }
-
-  closedir(dir);
-}
-
-/**
- * @brief load kinds from file to a vector
- *
- * @param path - path of the kinds file
- * @param kinds - the vector of kinds string
- *
- * @return none
- */
-void LoadWords(string const& path, vector<string>& kinds) {
-  kinds.clear();
-  ifstream fkinds(path);
-  if (fkinds.fail()) {
-    fprintf(stderr, "Error : Open %s failed.\n", path.c_str());
-    exit(1);
-  }
-  string kind;
-  while (getline(fkinds, kind)) {
-    kinds.push_back(kind);
-  }
-
-  fkinds.close();
-}
-
-/**
- * @brief calculate softmax
- *
- * @param data - pointer to input buffer
- * @param size - size of input buffer
- * @param result - calculation result
- *
- * @return none
- */
-void CPUCalcSoftmax(const int8_t* data, size_t size, float* result,
-                    float scale) {
-  assert(data && result);
-  double sum = 0.0f;
-
-  for (size_t i = 0; i < size; i++) {
-    result[i] = exp((float)data[i] * scale);
-    sum += result[i];
-  }
-  for (size_t i = 0; i < size; i++) {
-    result[i] /= sum;
+    auto end_time = std::chrono::steady_clock::now();
+    std::cout << "Read #" << current_count << " ended at: " 
+              << format_duration(program_start_time, end_time) << std::endl;
+    std::cout << "Read #" << current_count << " total duration: " 
+              << format_duration(start_time, end_time) << std::endl;
   }
 }
 
 /**
- * @brief Get top k results according to its probability
+ * @brief Display frames in display queue
  *
- * @param d - pointer to input data
- * @param size - size of input data
- * @param k - calculation result
- * @param vkinds - vector of kinds
+ * @param is_displaying - status flag of Display thread
  *
  * @return none
  */
-void TopK(const float* d, int size, int k, vector<string>& vkinds) {
-  assert(d && size > 0 && k > 0);
-  priority_queue<pair<float, int>> q;
+void Display(bool& is_displaying) {
+    // Create a named window for displaying the video analysis
+    cv::namedWindow("Video Analysis", cv::WINDOW_NORMAL);
+    // Resize the window to 1280x720 pixels
+    cv::resizeWindow("Video Analysis", 1280, 720);
 
-  for (auto i = 0; i < size; ++i) {
-    q.push(pair<float, int>(d[i], i));
-  }
+    // Variable to store the last frame time for FPS calculation
+    auto lastFrameTime = std::chrono::high_resolution_clock::now();
 
-  for (auto i = 0; i < k; ++i) {
-    pair<float, int> ki = q.top();
-    printf("top[%d] prob = %-8f  name = %s\n", i, d[ki.second],
-           vkinds[ki.second].c_str());
-    q.pop();
-  }
+    // Continue displaying frames as long as is_displaying is true
+    while (is_displaying) {
+        // Lock the mutex to safely access the shared display_queue
+        int current_count = ++Display_count;
+        auto start_time = std::chrono::steady_clock::now();
+        std::cout << "Display #" << current_count << " started at: " 
+                  << format_duration(program_start_time, start_time) << std::endl;      
+
+        mtx_display_queue.lock();
+        
+        if (display_queue.empty()) {
+            // If the display queue is empty, check if processing is still ongoing
+            if (std::any_of(is_running.begin(), is_running.end(), [](bool v) { return v; }) || is_reading) {
+                // If processing is ongoing, unlock the mutex and wait for a short time
+                mtx_display_queue.unlock();
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            } else {
+                // If processing is finished and queue is empty, end the display loop
+                is_displaying = false;
+                mtx_display_queue.unlock();
+                break;
+            }
+        } else {
+            // If there are frames to display, get the top frame from the queue
+            auto current_frame = display_queue.top();
+            display_queue.pop();
+            mtx_display_queue.unlock();
+
+            // Calculate current FPS
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            double fps = 1.0 / std::chrono::duration<double>(currentTime - lastFrameTime).count();
+            lastFrameTime = currentTime;
+
+            // Display current FPS on the frame
+            cv::putText(current_frame.second, 
+                        "FPS: " + std::to_string(int(fps)), 
+                        cv::Point(10, 30), 
+                        cv::FONT_HERSHEY_SIMPLEX, 
+                        1, 
+                        cv::Scalar(0, 255, 0), 
+                        2);
+
+            // Display the frame
+            cv::imshow("Video Analysis", current_frame.second);
+
+            int key = cv::waitKey(30);
+            
+        }
+            auto end_time = std::chrono::steady_clock::now();
+            std::cout << "Display #" << current_count << " ended at: " 
+                      << format_duration(program_start_time, end_time) << std::endl;
+            std::cout << "Display #" << current_count << " total duration: " 
+                      << format_duration(start_time, end_time) << std::endl;
+    }
+
+    // Close all OpenCV windows when display loop ends
+    cv::destroyAllWindows();
 }
+
+//runFacedetect 구조체 저장
+struct FaceDetectResult {
+    struct BoundingBox {
+        float x, y, width, height, score;
+    };
+    int width, height;
+    std::vector<BoundingBox> rects;
+};
+
+struct SharedDetectionResults {
+    std::vector<FaceDetectResult> results;
+    cv::Mat frame;
+    int frame_index;
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool ready = false;
+    bool finished = false;
+};
+
+SharedDetectionResults sharedResults;
 
 void NormalizeInputData(const unsigned char* input, int rows, int cols, int channels,
                         int stride, const std::vector<float>& mean,
@@ -348,230 +425,195 @@ void applyNMS(const std::vector<std::vector<float>>& boxes, const std::vector<fl
   }
 }
 
-/**
- * @brief Run DPU Task for ResNet50
- *
- * @param taskResnet50 - pointer to ResNet50 Task
- *
- * @return none
- */
+void RunFaceDetect(vart::Runner* runner, bool& is_running) {
+    int current_count = ++face_detect_count;
+    auto start_time = std::chrono::steady_clock::now();
+    std::cout << "RunFaceDetect #" << current_count << " started at: " 
+              << format_duration(program_start_time, start_time) << std::endl;
 
-std::vector<FaceDetectResult> runFacedetect(vart::Runner* runner) {
-  std::vector<FaceDetectResult> allResults; //FD 결과인 bounding box 위치를 저장할 vector 선언
-  vector<string> images;  //이미지 파일 목록을 저장할 벡터
-  ListImages(baseImagePath, images); //지정된 경로에서 이미지 파일 목록을 가져옴
-  if (images.size() == 0) {
-    cerr << "\nError: No images existing under " << baseImagePath << endl;
-    return std::vector<FaceDetectResult>();
-  }
+    // Get tensors
+    auto outputTensors = runner->get_output_tensors();
+    auto inputTensors = runner->get_input_tensors();
+    auto out_dims = outputTensors[0]->get_shape();
+    auto in_dims = inputTensors[0]->get_shape();
 
-  //preprocessing을 위한 mean, scale 설정
-  std::vector<float> mean = {128.0f, 128.0f, 128.0f};
-  std::vector<float> scale = {1.0f, 1.0f, 1.0f};
+    // Get scales
+    auto input_scale = get_input_scale(inputTensors[0]);
+    auto output_scale = get_output_scale(outputTensors[0]);
 
-  //DPU runner로부터 입력, 출력 tensor 정보 가져오기
-  auto outputTensors = runner->get_output_tensors();
-  auto inputTensors = runner->get_input_tensors();
-  auto out_dims = outputTensors[0]->get_shape();
-  auto in_dims = inputTensors[0]->get_shape();
-  //입력 및 출력 scale가져오기
-  auto input_scale = get_input_scale(inputTensors[0]);
-  auto output_scale = get_output_scale(outputTensors[0]);
-  //입출력 텐서의 크기 및 형태 정보 설정
-  int outSize = out_dims[1] * out_dims[2] * out_dims[3]; //height*width*channels
-  int inSize = in_dims[1] * in_dims[2] * in_dims[3];
-  int inHeight = shapes.inTensorList[0].height;
-  int inWidth = shapes.inTensorList[0].width;
-  int batchSize = in_dims[0];
+    // Set up sizes
+    int outSize = out_dims[1] * out_dims[2] * out_dims[3];
+    int inSize = in_dims[1] * in_dims[2] * in_dims[3];
+    int inHeight = in_dims[1];
+    int inWidth = in_dims[2];
+    int batchSize = in_dims[0];
 
-   // Tensor 정보 설정
-  std::cout << "Output Tensor Shape: ";
-  for (const auto& dim : out_dims) {
-      std::cout << dim << " ";  //1 96 160 4
-  }
-  std::cout << std::endl;
+    // Allocate memory for input images and results
+    int8_t* imageInputs = new int8_t[inSize * batchSize];
+    int8_t* FCResult = new int8_t[batchSize * outSize];
 
-  std::cout << "Input Tensor Shape: ";
-  for (const auto& dim : in_dims) {
-      std::cout << dim << " ";  //1 360 640 3
-  }
-  std::cout << std::endl;
-
-  std::cout << "Input Scale: " << input_scale << std::endl; //1
-  std::cout << "Output Scale: " << output_scale << std::endl; //1
-  std::cout << "Output Size: " << outSize << std::endl; //61440
-  std::cout << "out_dims[0] is " << out_dims[0] << std::endl; //1
-  std::cout << "out_dims[1] is " << out_dims[1] << std::endl; //96
-  std::cout << "out_dims[2] is " << out_dims[2] << std::endl; //160
-  std::cout << "out_dims[3] is " << out_dims[3] << std::endl; //4
-  std::cout << "Input Size: " << inSize << std::endl; //691200
-  std::cout << "Input Height: " << inHeight << std::endl; //360
-  std::cout << "Input Width: " << inWidth << std::endl; //640
-  std::cout << "Batch Size: " << batchSize << std::endl;  //1
-
-   //DPU 실행을 위한 입출력 buffer 준비
-  std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
-  std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
-  std::vector<std::shared_ptr<xir::Tensor>> batchTensors;
-
-  //입력 이미지, 결과를 저장할 buffer 할당
-  int8_t* imageInputs = new int8_t[inSize * batchSize]; //setImageBGR함수의 결과가 들어갈 배열 //resnet50참고해서 만듬
-  int8_t* FCResult = new int8_t[batchSize * outSize]; //Inference 결과가 들어갈 배열
-
-  //모든 이미지에 대해 처리 수행
-  for (unsigned int n = 0; n < images.size(); n += batchSize) {
-    unsigned int runSize = std::min((unsigned int)batchSize, (unsigned int)(images.size() - n));
-    
-    //이미지 로드 및 resize
-    vector<cv::Mat> imageList;
-    for (unsigned int i = 0; i < runSize; i++) {
-      cv::Mat image = cv::imread(baseImagePath + images[n + i]);
-      if (image.empty()) {
-        cerr << "Error: Unable to load image " << images[n + i] << endl;
-        continue;
-      }
-      cv::Mat resized;
-      cv::resize(image, resized, cv::Size(inWidth, inHeight));
-      imageList.push_back(image);
+    // Allocate memory for prediction scores
+    float* pred = new (std::nothrow) float[out_dims[1] * out_dims[2] * 2];
+    if (!pred) {
+        std::cerr << "Failed to allocate memory for pred" << std::endl;
+        delete[] imageInputs;
+        delete[] FCResult;
+        return;
     }
 
-    //이미지 데이터를 입력 형식에 맞게 변환
-    setImageBGR(imageList, runner, imageInputs, mean, scale);
-    
-    batchTensors.push_back(std::shared_ptr<xir::Tensor>(xir::Tensor::create(inputTensors[0]->get_name(), in_dims, xir::DataType{xir::DataType::XINT, 8u})));
-    inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs, batchTensors.back().get()));
+    // Set up mean and scale values for image preprocessing
+    std::vector<float> mean = {128.0f, 128.0f, 128.0f};
+    std::vector<float> scale = {1.0f, 1.0f, 1.0f};
 
-    batchTensors.push_back(std::shared_ptr<xir::Tensor>(xir::Tensor::create(outputTensors[0]->get_name(), out_dims, xir::DataType{xir::DataType::XINT, 8u})));
-    outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult, batchTensors.back().get()));
+    // Main processing loop
+    while (is_running) {
 
-    inputsPtr.clear();
-    outputsPtr.clear();
-    inputsPtr.push_back(inputs[0].get());
-    outputsPtr.push_back(outputs[0].get());
+        int fd_pre_count = ++fd_pre_count;
+        auto fd_pre_start_time = std::chrono::steady_clock::now();
+        std::cout << "fd_pre #" << fd_pre_count << " started at: " 
+                  << format_duration(program_start_time, fd_pre_start_time) << std::endl;
 
-    //DPU 실행
-    auto job_id = runner->execute_async(inputsPtr, outputsPtr);
-    auto status = runner->wait(job_id.first, -1);
-    CHECK_EQ(status, 0) << "failed to run dpu";
+        // Get an image from read queue      
+        int index;
+        cv::Mat img;
+        mtx_read_queue.lock();
+        if (read_queue.empty()) {
+          mtx_read_queue.unlock();
+          if (is_reading) {
+            continue;
+          } else {
+            is_running = false;
+            break;
+          }
+        } else {
+          index = read_queue.front().first;
+          img = read_queue.front().second;
+          read_queue.pop();
+          mtx_read_queue.unlock();
+        }
 
-    //Post-processing
-    const float det_threshold = 0.9f;
-    const float nms_threshold = 0.3f;
-    
-    
-    const auto out_tensors00_channel_ = outputTensors[0]->get_shape()[3]; //=4 //channel => 위에 out_dim[3] 참고 (x,y, width, height)
-    const auto out_tensors01_channel_ = outputTensors[1]->get_shape()[3]; //=2 
-    auto conv_idx = 0;
-    auto bbox_idx = 1;
+        // Resize image to match model input dimensions
+        cv::Mat resized;
+        cv::resize(img, resized, cv::Size(inWidth, inHeight));
 
-    std::cout << "output_tensors[0] channel is " << out_tensors00_channel_ << std::endl;
-    std::cout << "output_tensors[1] channel is " << out_tensors01_channel_ << std::endl;
+        // Prepare input data (Preprocessing)
+        setImageBGR({resized}, runner, imageInputs, mean, scale);
 
-    if (out_tensors00_channel_ == 2 && out_tensors01_channel_ == 4) {
-      conv_idx = 0;
-      bbox_idx = 1;
-    } else if (out_tensors00_channel_ == 4 && out_tensors01_channel_ == 2) {
-      conv_idx = 1;
-      bbox_idx = 0;
-    } else {
-      std::cout << "Output tensors channel is unexpected. "
-                << "output_tensors[0] channel is " << out_tensors00_channel_
-                << " output_tensors[1] channel is " << out_tensors01_channel_
-                << std::endl;
+        auto fd_pre_end_time = std::chrono::steady_clock::now();
+        std::cout << "fd_pre #" << fd_pre_count << " ended at: " 
+                  << format_duration(program_start_time, fd_pre_end_time) << std::endl;
+        std::cout << "fd_pre #" << fd_pre_count << " total duration: " 
+                  << format_duration(fd_pre_start_time, fd_pre_end_time) << std::endl;
+
+        int fd_inf_count = ++fd_inf_count;
+        auto fd_inf_start_time = std::chrono::steady_clock::now();
+        std::cout << "fd_inf_start #" << fd_inf_count << " started at: " 
+                  << format_duration(program_start_time, fd_inf_start_time) << std::endl;
+
+        // Set up input and output tensors for model execution
+        std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
+        std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
+        
+        inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs, inputTensors[0]));
+        outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult, outputTensors[0]));
+        inputsPtr.push_back(inputs[0].get());
+        outputsPtr.push_back(outputs[0].get());
+
+        // Run DPU
+        auto job_id = runner->execute_async(inputsPtr, outputsPtr);
+        auto status = runner->wait(job_id.first, -1);
+        CHECK_EQ(status, 0) << "failed to run dpu";
+
+        auto fd_inf_end_time = std::chrono::steady_clock::now();
+        std::cout << "fd_inf #" << fd_inf_count << " ended at: " 
+                  << format_duration(program_start_time, fd_inf_end_time) << std::endl;
+        std::cout << "fd_inf #" << fd_inf_count << " total duration: " 
+                  << format_duration(fd_inf_start_time, fd_inf_end_time) << std::endl;
+
+        int fd_post_count = ++fd_post_count;
+        auto fd_post_start_time = std::chrono::steady_clock::now();
+        std::cout << "fd_post_start #" << fd_post_count << " started at: " 
+                   << format_duration(program_start_time, fd_post_start_time) << std::endl;
+
+        // Set detection and NMS thresholds
+        const float det_threshold = 0.9f;
+        const float nms_threshold = 0.3f;
+        
+        // Calculate prediction scores
+        for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
+            pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);  // background score
+            pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;   // face score
+        }    
+
+        // Apply filtering to get potential face bounding boxes
+        std::vector<std::vector<float>> boxes = FilterBox(
+            output_scale,  // bb_out_scale
+            det_threshold,
+            FCResult,      // bbout
+            out_dims[2],   // width
+            out_dims[1],   // height
+            pred           // pred
+        );
+
+        // Extract scores from boxes
+        std::vector<float> scores;
+        for (auto& box : boxes) {
+            scores.push_back(box[4]);
+        }
+
+        // Apply Non-Maximum Suppression (NMS)
+        std::vector<size_t> res_k;
+        int max_faces = 1; // Limit to 1 face, adjust as needed
+        applyNMS(boxes, scores, nms_threshold, det_threshold, res_k, max_faces);
+
+        // Create FaceDetectResult structure with detected face rectangles
+        FaceDetectResult result{inWidth, inHeight};
+        for (auto& k : res_k) {
+            result.rects.push_back(FaceDetectResult::BoundingBox{
+                boxes[k][0] / inWidth,
+                boxes[k][1] / inHeight,
+                (boxes[k][2] - boxes[k][0]) / inWidth,
+                (boxes[k][3] - boxes[k][1]) / inHeight,
+                boxes[k][4]
+            });
+        }
+
+        // Store the result in the shared structure
+        {
+            std::lock_guard<std::mutex> lock(sharedResults.mutex);
+            sharedResults.results.push_back(result);
+            sharedResults.frame = img.clone();
+            sharedResults.frame_index = index;
+            sharedResults.cv.notify_one();  //waiting thread하나를 wake up 시킴
+        }
+
+        auto fd_post_end_time = std::chrono::steady_clock::now();
+        std::cout << "fd_post #" << fd_post_count << " ended at: " 
+                  << format_duration(program_start_time, fd_post_end_time) << std::endl;
+        std::cout << "fd_post #" << fd_post_count << " total duration: " 
+                  << format_duration(fd_post_start_time, fd_post_end_time) << std::endl;
     }
 
-    std::cout << "conv_idx is set to " << conv_idx << " and bbox_idx is set to " << bbox_idx << std::endl;
-
-    //컨볼루션 출력 관련 정보 설정
-    const auto conv_out_size_ = (out_dims[1] * out_dims[2] * out_dims[3])/batchSize;
-    const auto conv_out_addr_ = FCResult + conv_idx * conv_out_size_; //conv_out 데이터 시작 위치(배열)
-    const auto conv_out_scale_ = std::exp2f(-1.0f * (float)outputTensors[conv_idx]->get_attr<int>("fix_point"));  //: 양자화된 값을 부동소수점으로 변환할 때 사용하는 방법
-    const auto conv_out_channel_ = outputTensors[conv_idx]->get_shape()[3]; //output tensor channel
-    //conv_out_scale 원본코드 std::exp2f(-1.0f * (float)tensor.fixpos); 
-    //tensor의 고정소수점 위치를 가져온 후, -1을 곱하고 float 으로 변환, 2의 거듭제곱 계산 
-    //: 양자화된 값을 부동소수점으로 변환할 때 사용하는 방법
-
-    std::cout << "conv_out_size_ is " << conv_out_size_ << std::endl;
-    std::cout << "conv_out_addr_ is " << (void*)conv_out_addr_ << std::endl;
-    std::cout << "conv_out_scale_ is " << conv_out_scale_ << std::endl;
-    std::cout << "conv_out_channel_ is " << conv_out_channel_ << std::endl;
-
-    //Softmax 연산 수행
-    std::vector<float> conf(conv_out_size_);
-    softmax(conv_out_addr_, conv_out_scale_, conv_out_channel_, 
-            conv_out_size_ / conv_out_channel_, conf.data()); //conf.data()가 output
-
-    //Bounding box 출력 정보 설정
-    int8_t* bbout = FCResult + bbox_idx * conv_out_size_;
-    const auto bb_out_width = out_dims[2];
-    const auto bb_out_height = out_dims[1];
-    const auto bb_out_scale = std::exp2f(-1.0f * (float)outputTensors[bbox_idx]->get_attr<int>("fix_point"));
-
-    //BoundingBox 필터링
-    std::vector<std::vector<float>> boxes = FilterBox(bb_out_scale, det_threshold, 
-                                                      bbout, bb_out_width, bb_out_height, conf.data());
-
-    //score를 넣음
-    std::vector<float> scores;
-    for (auto& box : boxes) { //모든 박스에 대해 반복
-        scores.push_back(box[4]); //score에 box[4]원소를 넣음
+    // Signal that face detection is finished
+    {
+        std::lock_guard<std::mutex> lock(sharedResults.mutex);
+        sharedResults.finished = true;
     }
+    sharedResults.cv.notify_all();  //모든 waiting thread를 wake up 시킴
 
-    //NMS(Non-Maximum Suppression) 적용
-    std::vector<size_t> res_k;
-    int max_faces = 1; // 최대 1개 박스로 제한
-    applyNMS(boxes, scores, nms_threshold, det_threshold, res_k, max_faces);
+    // Clean up allocated memory
+    delete[] imageInputs;
+    delete[] FCResult;
+    delete[] pred;
 
-    //최종 결과 생성
-    FaceDetectResult result{inWidth, inHeight};
-    //박스 좌표 조정
-    //원본 좌표 정규화, 좌표표현방식 (x1, y1, x2,y2) -> (x1, y1, width, height)
-    for (auto& k : res_k) {
-      result.rects.push_back(FaceDetectResult::BoundingBox{
-        boxes[k][0] / inWidth,  //x
-        boxes[k][1] / inHeight, //y
-        (boxes[k][2] - boxes[k][0]) / inWidth, //x2-x1 Width
-        (boxes[k][3] - boxes[k][1]) / inHeight, //y2-y1 Height
-        boxes[k][4] //Score
-      });
-    }
-
-    //bounding box 위치 'allResults'에 저장
-    allResults.push_back(result);
-
-    // Draw bounding boxes, save the image, and print box positions
-    for (unsigned int i = 0; i < runSize; i++) {
-      cv::Mat image = imageList[i];
-      cv::Mat resized;
-      cv::resize(image, resized, cv::Size(result.width, result.height));
-
-      std::cout << "Detected faces in image " << images[n + i] << ":" << std::endl;
-      for (const auto &r : result.rects) {
-        cv::rectangle(resized,
-                      cv::Rect{cv::Point(r.x * resized.cols, r.y * resized.rows),
-                               cv::Size{(int)(r.width * resized.cols),
-                                        (int)(r.height * resized.rows)}},
-                      cv::Scalar(0, 255, 0), 2);
-
-        // Print box position and score
-        std::cout << "  Box: x=" << r.x << ", y=" << r.y 
-                  << ", width=" << r.width << ", height=" << r.height 
-                  << ", score=" << r.score << std::endl;
-      }
-
-      std::string output_filename = "output_" + images[n + i];
-      cv::imwrite(output_filename, resized);
-      std::cout << "Saved result image: " << output_filename << std::endl;
-    }
-
-  }
-
-  return allResults;
-
-  delete[] imageInputs;
-  delete[] FCResult;
+    auto end_time = std::chrono::steady_clock::now();
+    std::cout << "RunFaceDetect #" << current_count << " ended at: " 
+              << format_duration(program_start_time, end_time) << std::endl;
+    std::cout << "RunFaceDetect #" << current_count << " total duration: " 
+              << format_duration(start_time, end_time) << std::endl;
 }
 
+/* Run Facerecog */
 float feature_norm(const float *feature) {
   float sum = 0;
   for (int i = 0; i < 512; ++i) {
@@ -635,401 +677,303 @@ void NormalizeInputDataRGB(const uint8_t* input, int rows, int cols,
   }
 }
 
-void runFacerecog(vart::Runner* runner, const std::vector<FaceDetectResult>& faceDetectResults) {
-  std::cout << "\n";
-  std::cout << "/////////////////////////////\n";
-  std::cout << "///Face Recognition Start///\n";
-  std::cout << "/////////////////////////////\n";
-
-  // Initialization and setup
-  vector<string> images;
-  ListImages(baseImagePath, images);  // Load image file names
-
-  std::vector<cv::Mat> croppedFaces;  // Store cropped face images
+void runFacerecog(vart::Runner* runner, bool& is_running) {
+  std::cout << "Face Recognition Thread Started\n";
+  int current_count = ++face_recog_count;
+  auto start_time = std::chrono::steady_clock::now();
+  std::cout << "runFacerecog #" << current_count << " started at: " 
+              << format_duration(program_start_time, start_time) << std::endl;
 
   // Load pre-computed embeddings
   std::vector<std::vector<float>> embedding_arr;
   std::vector<float> embedding_norm_arr;
   std::vector<std::string> embedding_class_arr;
-    auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
+  auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
   std::tie(embedding_arr, embedding_norm_arr, embedding_class_arr) = load_embeddings(embeddings_npzpath);
 
-   // Get model input and output details
+  // Get model input and output details 
   auto outputTensors = runner->get_output_tensors();
   auto inputTensors = runner->get_input_tensors();
   auto out_dims = outputTensors[0]->get_shape();
   auto in_dims = inputTensors[0]->get_shape();
   auto input_scale = get_input_scale(inputTensors[0]);
   auto output_scale = get_output_scale(outputTensors[0]);
-  int outSize = out_dims[1];  // Changed from out_dims[1] * out_dims[2] * out_dims[3]
+  int outSize = out_dims[1];
   int inSize = in_dims[1] * in_dims[2] * in_dims[3];
-  int inHeight = shapes.inTensorList[0].height;
-  int inWidth = shapes.inTensorList[0].width;
+  int inHeight = in_dims[1];
+  int inWidth = in_dims[2];
   int batchSize = in_dims[0];
-
-  // Print model details for debugging
-  std::cout << "Rec_Output Tensor Shape: ";
-  for (const auto& dim : out_dims) {
-      std::cout << dim << " ";
-  }
-  std::cout << std::endl;
-
-  std::cout << "Rec_Input Tensor Shape: ";
-  for (const auto& dim : in_dims) {
-      std::cout << dim << " ";
-  }
-  std::cout << std::endl;
-
-  std::cout << "Rec_Input Scale: " << input_scale << std::endl;
-  std::cout << "Rec_Output Scale: " << output_scale << std::endl;
-  std::cout << "Rec_Output Size: " << outSize << std::endl;
-  std::cout << "Rec_in_dims[0] is " << in_dims[0] << std::endl;
-  std::cout << "Rec_in_dims[1] is " << in_dims[1] << std::endl;
-  std::cout << "Rec_in_dims[2] is " << in_dims[2] << std::endl;
-  std::cout << "Rec_in_dims[3] is " << in_dims[3] << std::endl;
-  std::cout << "Rec_out_dims[0] is " << out_dims[0] << std::endl;
-  std::cout << "Rec_out_dims[1] is " << out_dims[1] << std::endl;
-  std::cout << "Rec_out_dims[2] is " << out_dims[2] << std::endl;
-  std::cout << "Rec_out_dims[3] is " << out_dims[3] << std::endl;
-  std::cout << "Rec_Input Size: " << inSize << std::endl;
-  std::cout << "Rec_Input Height: " << inHeight << std::endl;
-  std::cout << "Rec_Input Width: " << inWidth << std::endl;
-  std::cout << "Rec_Batch Size: " << batchSize << std::endl;
-
-  std::cout << "faceDetectResults.size() : " << faceDetectResults.size() << std::endl;
-  std::cout << "\n";
-
-  std::cout << "Face Detection Results:\n";
-
-  // Process each detected face
-  for (size_t i = 0; i < faceDetectResults.size(); ++i) {
-    std::cout << "Image: " << images[i] << std::endl;
-    const auto& result = faceDetectResults[i];
-    // Print face detection results
-    for (const auto& rect : result.rects) {
-      std::cout << "  Bounding Box: "
-                << "x=" << rect.x << ", "
-                << "y=" << rect.y << ", "
-                << "width=" << rect.width << ", "
-                << "height=" << rect.height << ", "
-                << "score=" << rect.score << std::endl;
-    }
-
-    // Load and process the original image
-    cv::Mat image = cv::imread(baseImagePath + images[i]);
-    if (image.empty()) {
-      std::cerr << "Error: Unable to read image " << images[i] << std::endl;
-      continue;
-    }
-
-    // Crop and save detected faces
-    for (const auto &r : result.rects) {
-      cv::Mat resized;
-      cv::resize(image, resized, cv::Size(result.width, result.height));
-
-      std::cout << "Detected faces in image " << images[i] << ":" << std::endl;
-
-      cv::Mat cropped_img = resized(cv::Rect(r.x * resized.cols, 
-                                            r.y * resized.rows,
-                                            r.width * resized.cols,
-                                            r.height * resized.rows));
-      
-      std::string crop_filename = "cropped_face_" + images[i] + "_" + 
-                                  std::to_string(croppedFaces.size()) + ".jpg";
-      cv::imwrite(crop_filename, cropped_img);
-      std::cout << "Saved result image: " << crop_filename << std::endl;
-
-      croppedFaces.push_back(cropped_img);
-    }
-  }
 
   // Define preprocessing parameters
   std::vector<float> mean = {128.0f, 128.0f, 128.0f};
   std::vector<float> scale = {0.0078125f, 0.0078125f, 0.0078125f};
 
-  // Process each cropped face
-  for (size_t i = 0; i < croppedFaces.size(); ++i) {
-    std::cout << "inSize: " << inSize << ", batchSize: " << batchSize << ", outSize: " << outSize << std::endl;
-    std::cout << "Attempting to allocate imageInputs with size: " << (inSize * batchSize) << std::endl;
-    std::cout << "Attempting to allocate FCResult with size: " << (batchSize * outSize) << std::endl;
+  while (is_running) {
+     int fr_pre_count = ++fr_pre_count;
+     auto fr_pre_start_time = std::chrono::steady_clock::now();
+     std::cout << "fr_pre_start #" << fr_pre_count << " started at: " 
+               << format_duration(program_start_time, fr_pre_start_time) << std::endl;
 
-    std::vector<int8_t> imageInputs;
-    std::vector<int8_t> FCResult;
 
-    try {
-        imageInputs.resize(inSize * batchSize, 0);
-        FCResult.resize(batchSize * outSize, 0);
-    } catch (const std::bad_alloc& e) {
-        std::cerr << "Memory allocation failed: " << e.what() << std::endl;
-        continue;  // Skip to the next iteration of the loop
+    FaceDetectResult faceDetectResult;
+    cv::Mat frame;
+    int frame_index;
+    bool have_result = false;
+
+    // Acquire lock and wait for results or finish signal
+    {
+      std::unique_lock<std::mutex> lock(sharedResults.mutex);
+      sharedResults.cv.wait(lock, [&]{
+        return !sharedResults.results.empty() || sharedResults.finished;  //lamda function returns true when 'not empty' or 'finished'
+      });
+
+      // Check if we're finished and no more results
+      if (sharedResults.finished && sharedResults.results.empty()) {
+        break;
+      }
+
+      // If we have results, get one result from the queue
+      if (!sharedResults.results.empty()) {
+        faceDetectResult = sharedResults.results.front();
+        sharedResults.results.erase(sharedResults.results.begin());
+        frame = sharedResults.frame.clone();
+        frame_index = sharedResults.frame_index;
+        have_result = true;
+      }
     }
 
-    std::cout << "imageInputs size: " << imageInputs.size() << std::endl;
-    std::cout << "FCResult size: " << FCResult.size() << std::endl;
+    // If we have a result, process it
+    if (have_result) {
+      std::vector<cv::Mat> croppedFaces;
+      for (const auto &r : faceDetectResult.rects) {
+        cv::Mat cropped_img = frame(cv::Rect(r.x * frame.cols, r.y * frame.rows,
+                                             r.width * frame.cols, r.height * frame.rows));
+        cv::Mat resized_img;
+        cv::resize(cropped_img, resized_img, cv::Size(inWidth, inHeight));
+        croppedFaces.push_back(resized_img);
+      }
 
-    std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
-    std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
-    std::vector<std::shared_ptr<xir::Tensor>> batchTensors;
+      for (size_t i = 0; i < croppedFaces.size(); ++i) {
+        std::vector<int8_t> imageInputs(inSize * batchSize, 0);
+        std::vector<int8_t> FCResult(batchSize * outSize, 0);
 
-    if (imageInputs.empty() || FCResult.empty()) {
-        std::cerr << "Failed to allocate memory for imageInputs or FCResult" << std::endl;
-        continue;
-    }
-
-    // Preprocess the cropped face image
-    cv::Mat& cropped_img = croppedFaces[i];
-    cv::Mat resized_img;
-    cv::resize(cropped_img, resized_img, cv::Size(inWidth, inHeight));
-
-    // Convert image to input format
-    for (int h = 0; h < inHeight; h++) {
-      for (int w = 0; w < inWidth; w++) {
-        for (int c = 0; c < 3; c++) {
-          int index = h * inWidth * 3 + w * 3 + c;
-          if (index < inSize * batchSize) {
-            imageInputs[index] = static_cast<int8_t>(
-              (resized_img.at<cv::Vec3b>(h, w)[c] - mean[c]) * input_scale);
+        // Convert image to input format
+        for (int h = 0; h < inHeight; h++) {
+          for (int w = 0; w < inWidth; w++) {
+            for (int c = 0; c < 3; c++) {
+              int index = h * inWidth * 3 + w * 3 + c;
+              imageInputs[index] = static_cast<int8_t>(
+                (croppedFaces[i].at<cv::Vec3b>(h, w)[c] - mean[c]) * input_scale);
+            }
           }
         }
-      }
-    }
 
-    std::cout << "imageInputs size: " << imageInputs.size() << std::endl;
-    if (imageInputs.size() != 1 * 160 * 160 * 3) {
-        std::cerr << "Warning: imageInputs size mismatch!" << std::endl;
-        continue;
-    }
+        auto fr_pre_end_time = std::chrono::steady_clock::now();
+        std::cout << "fr_pre #" << fr_pre_count << " ended at: " 
+                  << format_duration(program_start_time, fr_pre_end_time) << std::endl;
+        std::cout << "fr_pre #" << fr_pre_count << " total duration: " 
+                  << format_duration(fr_pre_start_time, fr_pre_end_time) << std::endl;
 
-    auto input_tensor = xir::Tensor::create(inputTensors[0]->get_name(), in_dims, xir::DataType{xir::DataType::XINT, 8u});
-    if (!input_tensor) {
-        std::cerr << "Failed to create input tensor" << std::endl;
-        continue;
-    }
-    batchTensors.push_back(std::shared_ptr<xir::Tensor>(std::move(input_tensor)));
+        int fr_inf_count = ++fr_inf_count;
+        auto fr_inf_start_time = std::chrono::steady_clock::now();
+        std::cout << "fr_inf_start #" << fr_inf_count << " started at: " 
+                  << format_duration(program_start_time, fr_inf_start_time) << std::endl;
 
-    try {
-        std::cout << "Creating input CpuFlatTensorBuffer..." << std::endl;
-        inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs.data(), batchTensors.back().get()));
-        std::cout << "Input CpuFlatTensorBuffer created successfully" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Exception creating CpuFlatTensorBuffer for input: " << e.what() << std::endl;
-        continue;
-    }
+        // Prepare input and output tensors
+        std::vector<std::unique_ptr<vart::TensorBuffer>> inputs, outputs;
+        std::vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
 
-    auto created_tensor = batchTensors.back();
-    auto shape = created_tensor->get_shape();
-    std::cout << "Created input tensor shape: ";
-    for (const auto& dim : shape) {
-        std::cout << dim << " ";
-    }
-    std::cout << std::endl;
+        inputs.push_back(std::make_unique<CpuFlatTensorBuffer>(imageInputs.data(), inputTensors[0]));
+        outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult.data(), outputTensors[0]));
+        inputsPtr.push_back(inputs[0].get());
+        outputsPtr.push_back(outputs[0].get());
 
-    auto output_tensor = xir::Tensor::create(outputTensors[0]->get_name(), out_dims, xir::DataType{xir::DataType::XINT, 8u});
-    if (!output_tensor) {
-        std::cerr << "Failed to create output tensor" << std::endl;
-        continue;
-    }
-    batchTensors.push_back(std::shared_ptr<xir::Tensor>(std::move(output_tensor)));
-
-    try {
-        std::cout << "Creating output CpuFlatTensorBuffer..." << std::endl;
-        outputs.push_back(std::make_unique<CpuFlatTensorBuffer>(FCResult.data(), batchTensors.back().get()));
-        std::cout << "Output CpuFlatTensorBuffer created successfully" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Exception creating CpuFlatTensorBuffer for output: " << e.what() << std::endl;
-        continue;
-    }
-
-    created_tensor = batchTensors.back();
-    shape = created_tensor->get_shape();
-    std::cout << "Created output tensor shape: ";
-    for (const auto& dim : shape) {
-        std::cout << dim << " ";
-    }
-    std::cout << std::endl;
-
-    if (inputs.empty() || outputs.empty() || inputs.back()->data().first == 0 || outputs.back()->data().first == 0) {
-        std::cerr << "Failed to create tensor buffer: data pointer is null" << std::endl;
-        std::cout << "inputs.empty(): " << inputs.empty() << std::endl;
-        std::cout << "outputs.empty(): " << outputs.empty() << std::endl;
-        if (!inputs.empty()) std::cout << "inputs.back()->data().first: " << inputs.back()->data().first << std::endl;
-        if (!outputs.empty()) std::cout << "outputs.back()->data().first: " << outputs.back()->data().first << std::endl;
-        continue;
-    }
-
-    inputsPtr.push_back(inputs[0].get());
-    outputsPtr.push_back(outputs[0].get());
-
-    if (inputsPtr.empty() || outputsPtr.empty() || 
-        inputsPtr[0]->data().first == 0 || outputsPtr[0]->data().first == 0) {
-        std::cerr << "Invalid input or output pointers" << std::endl;
-        continue;
-    }
-
-     // Execute the DPU (Deep Processing Unit) asynchronously
-    try {
+        // Execute the DPU
         auto job_id = runner->execute_async(inputsPtr, outputsPtr);
-        
-        std::cout << "Input tensor shape: ";
-        for (const auto& dim : inputsPtr[0]->get_tensor()->get_shape()) {
-            std::cout << dim << " ";
-        }
-        std::cout << std::endl;
-
-        std::cout << "Output tensor shape: ";
-        for (const auto& dim : outputsPtr[0]->get_tensor()->get_shape()) {
-            std::cout << dim << " ";
-        }
-        std::cout << std::endl;
-
-        std::cout << "First 10 values of input data: ";
-        int8_t* input_data = reinterpret_cast<int8_t*>(inputsPtr[0]->data().first);
-        for (int j = 0; j < 10; ++j) {
-            std::cout << static_cast<int>(input_data[j]) << " ";
-        }
-        std::cout << std::endl;
-
         auto status = runner->wait(job_id.first, -1);
-        if (status == 0) {
-            std::cout << "DPU execution successful. FCResult values:" << std::endl;
-            for (int j = 0; j < std::min(static_cast<int>(FCResult.size()), 20); ++j) {
-                std::cout << static_cast<int>(FCResult[j]) << " ";
-            }
-            std::cout << "... (showing first 20 values)" << std::endl;
-        } else {
-            std::cerr << "DPU execution failed with status " << status << std::endl;
+        if (status != 0) {
+          std::cerr << "DPU execution failed with status " << status << std::endl;
+          continue;
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Exception during DPU execution: " << e.what() << std::endl;
-        continue;
-    }
 
-    // Post-processing: Convert int8_t output to float
-    std::vector<float> float_output(outSize);
-    for (int j = 0; j < outSize; ++j) {
-      float_output[j] = static_cast<float>(FCResult[j]) * output_scale;
-    }
+        auto fr_inf_end_time = std::chrono::steady_clock::now();
+        std::cout << "fr_inf #" << fr_inf_count << " ended at: " 
+                  << format_duration(program_start_time, fr_inf_end_time) << std::endl;
+        std::cout << "fr_inf #" << fr_inf_count << " total duration: " 
+                  << format_duration(fr_inf_start_time, fr_inf_end_time) << std::endl;
 
-    // Find the best matching embedding
-    float max_similarity = -1.0f;
-    int max_similarity_index = -1;
-    for (size_t e = 0; e < embedding_arr.size(); ++e) {
-      float similarity = cosine_similarity(float_output.data(), embedding_arr[e].data());
-      if (similarity > max_similarity) {
-        max_similarity = similarity;
-        max_similarity_index = e;
-        std::cout << "max_similarity_value " << max_similarity << std::endl;
-        std::cout << "max_similarity_index: " << max_similarity_index << std::endl;
+        int fr_post_count = ++fr_post_count;
+        auto fr_post_start_time = std::chrono::steady_clock::now();
+        std::cout << "fr_post_start #" << fr_post_count << " started at: " 
+                   << format_duration(program_start_time, fr_post_start_time) << std::endl;
+
+        // Post-processing and face recognition 
+        std::vector<float> float_output(outSize);
+        for (int j = 0; j < outSize; ++j) {
+          float_output[j] = static_cast<float>(FCResult[j]) * output_scale;
+        }
+
+        float max_similarity = -1.0f;
+        int max_similarity_index = -1;
+        for (size_t e = 0; e < embedding_arr.size(); ++e) {
+          float similarity = cosine_similarity(float_output.data(), embedding_arr[e].data());
+          if (similarity > max_similarity) {
+            max_similarity = similarity;
+            max_similarity_index = e;
+          }
+        }
+
+        std::string recognized_label = "Unknown";
+        if (max_similarity_index != -1 && max_similarity > 0.6) {
+          recognized_label = embedding_class_arr[max_similarity_index];
+        }
+
+        // Draw bounding box and label on the frame
+        const auto& r = faceDetectResult.rects[i];
+        cv::rectangle(frame, cv::Rect(r.x * frame.cols, r.y * frame.rows,
+                                      r.width * frame.cols, r.height * frame.rows),
+                      cv::Scalar(0, 255, 0), 2);
+        cv::putText(frame, recognized_label,
+                    cv::Point(r.x * frame.cols, r.y * frame.rows - 10),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.9, cv::Scalar(0, 255, 0), 2);
+
+        std::cout << "Recognized face: " << recognized_label << " (Similarity: " << max_similarity << ")" << std::endl;
       }
+
+      // Put processed frame into display queue
+      mtx_display_queue.lock();
+      display_queue.push(std::make_pair(frame_index, frame));
+      mtx_display_queue.unlock();
     }
-
-    // Get the label for the best match
-    std::string recognized_label = "Unknown";
-    if (max_similarity_index != -1 && max_similarity > 0.6) { // You can adjust this threshold
-      recognized_label = embedding_class_arr[max_similarity_index];
-      std::cout << "recognized_label: " << recognized_label << std::endl;
-    }
-
-    // Draw bounding box and label on the original image
-    cv::Mat original_image = cv::imread(baseImagePath + images[i]);
-    if (!original_image.empty()) {
-      const auto& result = faceDetectResults[i];
-      for (const auto& r : result.rects) {
-        int x = r.x * original_image.cols;
-        int y = r.y * original_image.rows;
-        int width = r.width * original_image.cols;
-        int height = r.height * original_image.rows;
-
-        cv::rectangle(original_image, cv::Rect(x, y, width, height), cv::Scalar(0, 255, 0), 2);
-        cv::putText(original_image, recognized_label,
-                        cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.9, cv::Scalar(0, 255, 0), 2);
-      }
-
-      // Save the image with bounding box and label
-      std::string output_filename = "output_" + images[i];
-      cv::imwrite(output_filename, original_image);
-      std::cout << "Saved output image with detection: " << output_filename << std::endl;
-    }
-
-    std::cout << "Recognized face: " << recognized_label << " (Similarity: " << max_similarity << ")" << std::endl;
-  
+   
+    auto fr_post_end_time = std::chrono::steady_clock::now();
+    std::cout << "fr_post #" << fr_post_count << " ended at: " 
+              << format_duration(program_start_time, fr_post_end_time) << std::endl;
+    std::cout << "fr_post #" << fr_post_count << " total duration: " 
+              << format_duration(fr_post_start_time, fr_post_end_time) << std::endl;
   }
+
+  std::cout << "Face Recognition Thread Finished\n";
+  auto end_time = std::chrono::steady_clock::now();
+  std::cout << "runFacerecog #" << current_count << " ended at: " 
+            << format_duration(program_start_time, end_time) << std::endl;
+  std::cout << "runFacerecog #" << current_count << " total duration: " 
+            << format_duration(start_time, end_time) << std::endl;
 }
 
 /**
- * @brief Entry for runing Densebox640_360 neural network
+ * @brief Entry for runing SSD neural network
  *
- * @note Runner APIs prefixed with "dpu" are used to easily program &
- *       deploy Densebox640_360 on DPU platform.
+ * @arg file_name[string] - path to file for detection
  *
  */
-
-//graph -> graph_fd
-//subgraph -> subgraph_fd
-//runner -> runner_fd
-//inputTensors -> inputTensors_fd
-//outputTensors -> outputTensors_fd
-int main(int argc, char* argv[]) {
+int main(int argc, char** argv) {
   // Check args
-  if (argc != 3) { //command line 인수가 2개 (프로그램 이름, 모델 파일)이 아니면 사용법 출력, 프로그램 종료
-    cout << "Usage of facedetect demo: ./fd_fr [fd_model_file] [fr_model_file]" << endl;
+  if (argc != 4) {
+    cout << "Usage of video analysis demo: ./video_analysis [video_file] "
+            "[fd_model_file]" "[fr_model_file]"
+         << endl;
     return -1;
   }
 
   //모델 path
-  argv[1] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
-  argv[2] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
+  argv[1] = "/home/root/VART/video_fd_fr/all5_720p.mp4";
+  argv[2] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
+  argv[3] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
 
-  auto graph_fd = xir::Graph::deserialize(argv[1]);
-  auto graph_fr = xir::Graph::deserialize(argv[2]);
+  // Initialize video capture
+  string file_name = argv[1];
+  cout << "Detect video: " << file_name << endl;
+  video.open(file_name);
+  if (!video.isOpened()) {
+    cout << "Failed to open video: " << file_name;
+    return -1;
+  }
 
+  // Load the face detection and face recognition models
+  auto graph_fd = xir::Graph::deserialize(argv[2]);
+  auto graph_fr = xir::Graph::deserialize(argv[3]);
+
+  // Extract the DPU subgraphs from the loaded models
   auto subgraph_fd = get_dpu_subgraph(graph_fd.get());
   auto subgraph_fr = get_dpu_subgraph(graph_fr.get());
 
-  CHECK_EQ(subgraph_fd.size(), 1u) //DPU subgraph가 정확히 하나인지 확인 
+  CHECK_EQ(subgraph_fd.size(), 1u) //DPU subgraph가 정확히 하나인지 확인
       << "Facedetect should have one and only one dpu subgraph.";
   LOG(INFO) << "create running for subgraph: " << subgraph_fd[0]->get_name(); //추출된 subgraph의 이름을 로그에 출력
-  CHECK_EQ(subgraph_fr.size(), 1u) //DPU subgraph가 정확히 하나인지 확인 
+  CHECK_EQ(subgraph_fr.size(), 1u) //DPU subgraph가 정확히 하나인지 확인
       << "Facerecog should have one and only one dpu subgraph.";
   LOG(INFO) << "create running for subgraph: " << subgraph_fr[0]->get_name(); //추출된 subgraph의 이름을 로그에 출력
-  
-  /*create runner*/
+
+  // create runner
   auto runner_fd = vart::Runner::create_runner(subgraph_fd[0], "run"); //추출된 subgraph를 실행할 runner객체 생성
   auto runner_fr = vart::Runner::create_runner(subgraph_fr[0], "run"); //추출된 subgraph를 실행할 runner객체 생성
-  // ai::XdpuRunner* runner = new ai::XdpuRunner("./");
-  
-  // runner에서 입,출력 텐서들 가져옴
+  //auto runner = vart::Runner::create_runner(subgraph[0], "run");
+  //auto runner1 = vart::Runner::create_runner(subgraph[0], "run");
+  //auto runner2 = vart::Runner::create_runner(subgraph[0], "run");
+  //auto runner3 = vart::Runner::create_runner(subgraph[0], "run");
+  //auto runner4 = vart::Runner::create_runner(subgraph[0], "run");
+  //auto runner5 = vart::Runner::create_runner(subgraph[0], "run");
+
+  // Get input/output tensor shapes for face detection
   auto inputTensors_fd = runner_fd->get_input_tensors();
   auto outputTensors_fd = runner_fd->get_output_tensors();
-  auto inputTensors_fr = runner_fr->get_input_tensors();
-  auto outputTensors_fr = runner_fr->get_output_tensors();
-
-  //입,출력 텐서 갯수 저장
   int inputCnt_fd = inputTensors_fd.size();
   int outputCnt_fd = outputTensors_fd.size();
+  TensorShape inshapes_fd[inputCnt_fd];
+  TensorShape outshapes_fd[outputCnt_fd];
+
+  // Get input/output tensor shapes for face recognition
+  auto inputTensors_fr = runner_fr->get_input_tensors();
+  auto outputTensors_fr = runner_fr->get_output_tensors();
   int inputCnt_fr = inputTensors_fr.size();
   int outputCnt_fr = outputTensors_fr.size();
-  
-  // 입, 출력 tnesor 형태 저장할 배열 생성, shape 구조체에 연결
-  TensorShape inshapes_fd[inputCnt_fd]; //TensorShape -> common.h
-  TensorShape outshapes_fd[outputCnt_fd];
-  TensorShape inshapes_fr[inputCnt_fr]; //TensorShape -> common.h
+  TensorShape inshapes_fr[inputCnt_fr];
   TensorShape outshapes_fr[outputCnt_fr];
 
-  //Run FD
-  shapes.inTensorList = inshapes_fd; //shapes -> Graphinfo -> common.h
-  shapes.outTensorList = outshapes_fd;
-  getTensorShape(runner_fd.get(), &shapes, inputCnt_fd, outputCnt_fd); //getTensorShape -> common.h
-  /*run with batch*/
-  /*얼굴 검출 실행*/
-  auto faceDetectResults = runFacedetect(runner_fd.get());
-
-  //Run FR
-  shapes.inTensorList = inshapes_fr; //shapes -> Graphinfo -> common.h
+  // Set up shapes for face detection
+  shapes.inTensorList = inshapes_fd;
   shapes.outTensorList = outshapes_fr;
-  getTensorShape(runner_fr.get(), &shapes, inputCnt_fr, outputCnt_fr); //getTensorShape -> common.h
-  /*run with batch*/
-  runFacerecog(runner_fr.get(), faceDetectResults);
+  getTensorShape(runner_fd.get(), &shapes, inputCnt_fd, outputCnt_fd);
 
+  // Run tasks for FD, FR
+  //vector<thread> threads(TNUM); // TNUM(6)개의 스레드를 저장할 벡터 생성
+  vector<thread> threads;
+  is_running.fill(true);  // 모든 스레드의 실행 상태를 true로 초기화
+  // 6개의 SSD 처리 스레드 생성 및 시작
+  // 각 스레드는 서로 다른 runner 인스턴스를 사용하여 병렬 처리
+  //threads[0] = thread(RunFaceDetect, runner.get(), ref(is_running[0]));
+  //threads[1] = thread(RunFaceDetect, runner1.get(), ref(is_running[1]));
+  //threads[2] = thread(RunFaceDetect, runner2.get(), ref(is_running[2]));
+  //threads[3] = thread(RunFaceDetect, runner3.get(), ref(is_running[3]));
+  //threads[4] = thread(RunFaceDetect, runner4.get(), ref(is_running[4]));
+  //threads[5] = thread(RunFaceDetect, runner5.get(), ref(is_running[5]));
+  threads.push_back(thread(RunFaceDetect, runner_fd.get(), ref(is_running[0])));
+  threads.push_back(thread(runFacerecog, runner_fr.get(), ref(is_running[1])));
+
+  //threads.push_back(thread(RunFaceDetect, runner_fd.get(), ref(is_running[2])));
+  //threads.push_back(thread(runFacerecog, runner_fr.get(), ref(is_running[3])));
+  // 비디오 프레임 읽기 스레드 생성 및 시작
+  threads.push_back(thread(Read, ref(is_reading)));
+  // 결과 표시 스레드 생성 및 시작
+  //'Display'함수가 다른 thread와 병렬로 실행됨.
+  //'is_displaying'변수를 Display함수에 전달 가능
+  threads.push_back(thread(Display, ref(is_displaying)));
+  
+
+  // 모든 스레드가 완료될 때까지 대기
+  for (auto& t : threads) {
+      t.join();
+  }
+
+  auto program_end_time = std::chrono::steady_clock::now();
+  std::cout << "Program ended at: " << format_duration(program_start_time, program_end_time) << std::endl;
+  std::cout << "Total program duration: " << format_duration(program_start_time, program_end_time) << std::endl;
+    
+  std::cout << "Total RunFaceDetect executions: " << face_detect_count << std::endl;
+  std::cout << "Total runFacerecog executions: " << face_recog_count << std::endl;
+
+  // 비디오 리소스 해제
+  video.release();
   return 0;
 }
