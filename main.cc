@@ -69,7 +69,10 @@ void NormalizeInputDataRGB(const uint8_t* input, int rows, int cols, int channel
 float feature_norm(const float *feature);
 float feature_dot(const float *f1, const float *f2);
 float cosine_similarity(const float *feature1, const float *feature2);
-void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult& faceDetectResult);
+void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult& faceDetectResult,
+                  const vector<vector<float>>& embedding_arr,
+                  const vector<float>& embedding_norm_arr,
+                  const vector<string>& embedding_class_arr);
 
 
 // Implement all the functions (NormalizeInputData, setImageBGR, softmax, FilterBox, cal_iou, applyNMS, 
@@ -143,11 +146,21 @@ FaceDetectResult runFacedetect(vart::Runner* runner, const Mat& frame) {
     vector<float> mean = {128.0f, 128.0f, 128.0f};
     vector<float> scale = {1.0f, 1.0f, 1.0f};
 
+    auto fd_resize_start = std::chrono::high_resolution_clock::now();
     Mat resized;
     cv::resize(frame, resized, Size(inWidth, inHeight));
+    auto fd_resize_end = std::chrono::high_resolution_clock::now();
+    auto fd_resize_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_resize_end - fd_resize_start);
+    std::cout << "fd_resize time: " << fd_resize_duration.count() << " ms" << std::endl;
 
+    auto fd_setImageBGR_start = std::chrono::high_resolution_clock::now();
     setImageBGR({resized}, runner, imageInputs.data(), mean, scale);
+    auto fd_setImageBGR_end = std::chrono::high_resolution_clock::now();
+    auto fd_setImageBGR_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_setImageBGR_end - fd_setImageBGR_start);
+    std::cout << "fd_setImageBGR time: " << fd_setImageBGR_duration.count() << " ms" << std::endl;
 
+
+    auto fd_inf_start = std::chrono::high_resolution_clock::now();
     vector<unique_ptr<vart::TensorBuffer>> inputs, outputs;
     vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
     
@@ -160,9 +173,14 @@ FaceDetectResult runFacedetect(vart::Runner* runner, const Mat& frame) {
     auto status = runner->wait(job_id.first, -1);
     CHECK_EQ(status, 0) << "failed to run dpu";
 
+    auto fd_inf_end = std::chrono::high_resolution_clock::now();
+    auto fd_inf_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_inf_end - fd_inf_start);
+    std::cout << "fd_inf time: " << fd_inf_duration.count() << " ms" << std::endl;
+
     const float det_threshold = 0.9f;
     const float nms_threshold = 0.3f;
     
+    auto fd_post_start = std::chrono::high_resolution_clock::now();
     vector<float> pred(out_dims[1] * out_dims[2] * 2);
     for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
         pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);
@@ -197,6 +215,10 @@ FaceDetectResult runFacedetect(vart::Runner* runner, const Mat& frame) {
             boxes[k][4]
         });
     }
+
+    auto fd_post_end = std::chrono::high_resolution_clock::now();
+    auto fd_post_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_post_end - fd_post_start);
+    std::cout << "fd_post time: " << fd_post_duration.count() << " ms" << std::endl;
 
     return result;
 }
@@ -363,12 +385,11 @@ void applyNMS(const vector<vector<float>>& boxes, const vector<float>& scores,
     }
 }
 
-void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult& faceDetectResult) {
-    vector<vector<float>> embedding_arr;
-    vector<float> embedding_norm_arr;
-    vector<string> embedding_class_arr;
-    auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
-    tie(embedding_arr, embedding_norm_arr, embedding_class_arr) = load_embeddings(embeddings_npzpath);
+void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult& faceDetectResult,
+                  const vector<vector<float>>& embedding_arr,
+                  const vector<float>& embedding_norm_arr,
+                  const vector<string>& embedding_class_arr) {
+    auto fr_init_start = std::chrono::high_resolution_clock::now();
 
     auto outputTensors = runner->get_output_tensors();
     auto inputTensors = runner->get_input_tensors();
@@ -385,7 +406,13 @@ void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult
     vector<float> mean = {128.0f, 128.0f, 128.0f};
     vector<float> scale = {0.0078125f, 0.0078125f, 0.0078125f};
 
+    auto fr_init_end = std::chrono::high_resolution_clock::now();
+    auto fr_init_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fr_init_end - fr_init_start);
+    std::cout << "fr_init time: " << fr_init_duration.count() << " ms" << std::endl;
+
     for (const auto &r : faceDetectResult.rects) {
+        auto fr_pre_start = std::chrono::high_resolution_clock::now();
+
         Mat cropped_img = frame(Rect(r.x * frame.cols, r.y * frame.rows,
                                      r.width * frame.cols, r.height * frame.rows));
         Mat resized_img;
@@ -396,6 +423,12 @@ void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult
 
         NormalizeInputDataRGB(resized_img.data, inHeight, inWidth, 3, resized_img.step,
                               mean, scale, imageInputs.data());
+
+        auto fr_pre_end = std::chrono::high_resolution_clock::now();
+        auto fr_pre_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fr_pre_end - fr_pre_start);
+        std::cout << "fr_pre time: " << fr_pre_duration.count() << " ms" << std::endl;
+
+        auto fr_inf_start = std::chrono::high_resolution_clock::now();
 
         vector<unique_ptr<vart::TensorBuffer>> inputs, outputs;
         vector<vart::TensorBuffer*> inputsPtr, outputsPtr;
@@ -411,6 +444,11 @@ void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult
             cerr << "DPU execution failed with status " << status << endl;
             continue;
         }
+        auto fr_inf_end = std::chrono::high_resolution_clock::now();
+        auto fr_inf_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fr_inf_end - fr_inf_start);
+        std::cout << "fr_inf time: " << fr_inf_duration.count() << " ms" << std::endl;
+
+        auto fr_post_start = std::chrono::high_resolution_clock::now();
 
         vector<float> float_output(outSize);
         for (int j = 0; j < outSize; ++j) {
@@ -440,6 +478,10 @@ void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult
                 FONT_HERSHEY_SIMPLEX, 0.9, Scalar(0, 255, 0), 2);
 
         cout << "Recognized face: " << recognized_label << " (Similarity: " << max_similarity << ")" << endl;
+
+        auto fr_post_end = std::chrono::high_resolution_clock::now();
+        auto fr_post_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fr_post_end - fr_post_start);
+        std::cout << "fr_post time: " << fr_post_duration.count() << " ms" << std::endl;
     }
 }
 
@@ -451,10 +493,15 @@ auto measureTime(const std::function<void()>& func) {
 }
 
 int main(int argc, char* argv[]) {
+    auto main_init_start = std::chrono::high_resolution_clock::now();
     if (argc != 4) {
         cout << "Usage: " << argv[0] << " <video_file> <fd_model_file> <fr_model_file>" << endl;
         return -1;
     }
+
+    argv[1] = "/home/root/VART/video_fd_fr/all5_720p.mp4";
+    argv[2] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
+    argv[3] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
 
     string video_path = argv[1];
     string fd_model_path = argv[2];
@@ -465,6 +512,12 @@ int main(int argc, char* argv[]) {
         cerr << "Error opening video file" << endl;
         return -1;
     }
+
+    vector<vector<float>> embedding_arr;
+    vector<float> embedding_norm_arr;
+    vector<string> embedding_class_arr;
+    auto embeddings_npzpath = "/usr/share/vitis_ai_library/models/InceptionResnetV1/embeddings_xmodel.npz";
+    tie(embedding_arr, embedding_norm_arr, embedding_class_arr) = load_embeddings(embeddings_npzpath);
 
     auto graph_fd = xir::Graph::deserialize(fd_model_path);
     auto graph_fr = xir::Graph::deserialize(fr_model_path);
@@ -481,20 +534,45 @@ int main(int argc, char* argv[]) {
     Mat frame;
     int frame_count = 0;
     
-    while (video.read(frame)) {
+    auto main_init_end = std::chrono::high_resolution_clock::now();
+    auto main_init_duration = std::chrono::duration_cast<std::chrono::milliseconds>(main_init_end - main_init_start);
+    std::cout << "main_init time: " << main_init_duration.count() << " ms" << std::endl;
+
+    while (true) {
         cout << "Processing frame " << frame_count++ << endl;
 
-        
+        //read
+        auto read_start = std::chrono::high_resolution_clock::now();
         if (!video.read(frame)) {
             std::cout << "End of video stream" << std::endl;
-            return;
+            return -1;
         }
-        
-        FaceDetectResult faceDetectResult = runFacedetect(runner_fd.get(), frame);
-        runFacerecog(runner_fr.get(), frame, faceDetectResult);
+        auto read_end = std::chrono::high_resolution_clock::now();
+        auto read_duration = std::chrono::duration_cast<std::chrono::milliseconds>(read_end - read_start);
+        std::cout << "Read time: " << read_duration.count() << " ms" << std::endl;
 
+        //fd
+        auto fd_start = std::chrono::high_resolution_clock::now();
+        FaceDetectResult faceDetectResult = runFacedetect(runner_fd.get(), frame);
+        auto fd_end = std::chrono::high_resolution_clock::now();
+        auto fd_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_end - fd_start);
+        std::cout << "fd time: " << fd_duration.count() << " ms" << std::endl;
+
+        //fr
+        auto fr_start = std::chrono::high_resolution_clock::now();
+        runFacerecog(runner_fr.get(), frame, faceDetectResult, embedding_arr, embedding_norm_arr, embedding_class_arr);
+        auto fr_end = std::chrono::high_resolution_clock::now();
+        auto fr_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fr_end - fr_start);
+        std::cout << "fr time: " << fr_duration.count() << " ms" << std::endl;
+
+        //display
+        auto display_start = std::chrono::high_resolution_clock::now();
         imshow("Video Processing", frame);
         if (waitKey(30) >= 0) break;
+        auto display_end = std::chrono::high_resolution_clock::now();
+        auto display_duration = std::chrono::duration_cast<std::chrono::milliseconds>(display_end - display_start);
+        std::cout << "display time: " << display_duration.count() << " ms" << std::endl;
+
     }
 
     video.release();
