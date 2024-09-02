@@ -33,6 +33,12 @@
 #include <vector>
 #include <chrono>
 
+#include <linux/fb.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "common.h"
 #include <opencv2/opencv.hpp>
 
@@ -74,10 +80,59 @@ void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult
                   const vector<float>& embedding_norm_arr,
                   const vector<string>& embedding_class_arr);
 
+int initFramebufferOutput(const char* device) {
+    int fb_fd = open(device, O_RDWR);
+    if (fb_fd < 0) {
+        perror("Failed to open framebuffer");
+        return -1;
+    }
 
-// Implement all the functions (NormalizeInputData, setImageBGR, softmax, FilterBox, cal_iou, applyNMS, 
-// runFacedetect, load_embeddings, NormalizeInputDataRGB, runFacerecog) here...
-// These functions should be the same as in the multi-threaded version.
+    struct fb_var_screeninfo vinfo;
+    if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &vinfo)) {
+        perror("Failed to get framebuffer info");
+        close(fb_fd);
+        return -1;
+    }
+
+    // Ensure that the framebuffer matches the intended resolution and color depth
+    vinfo.bits_per_pixel = 16;  // 16 bits per pixel for RGB565
+    if (ioctl(fb_fd, FBIOPUT_VSCREENINFO, &vinfo)) {
+        perror("Failed to set framebuffer info");
+        close(fb_fd);
+        return -1;
+    }
+
+    return fb_fd;
+}
+
+// Function to display an image on the framebuffer
+void displayFramebuffer(int fb_fd, const cv::Mat& image) {
+    struct fb_var_screeninfo vinfo;
+    if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &vinfo)) {
+        perror("Failed to get framebuffer info");
+        return;
+    }
+
+    int screensize = vinfo.yres_virtual * vinfo.xres_virtual * vinfo.bits_per_pixel / 8;
+    uint8_t* fb_data = (uint8_t*)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fb_fd, 0);
+    if (fb_data == MAP_FAILED) {
+        perror("Failed to map framebuffer device to memory");
+        return;
+    }
+
+    // Resize the input image to match the framebuffer resolution
+    cv::Mat resized_image;
+    cv::resize(image, resized_image, cv::Size(vinfo.xres, vinfo.yres));
+
+    // Convert the image to RGB565 format
+    cv::Mat rgb565_image;
+    cv::cvtColor(resized_image, rgb565_image, cv::COLOR_BGR2BGR565);
+
+    // Copy the image data to the framebuffer
+    memcpy(fb_data, rgb565_image.data, std::min(screensize, (int)(rgb565_image.total() * rgb565_image.elemSize())));
+
+    munmap(fb_data, screensize);
+}
 
 void NormalizeInputData(const unsigned char* input, int rows, int cols, int channels,
                         int stride, const vector<float>& mean,
@@ -513,6 +568,12 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    int fb_fd = initFramebufferOutput("/dev/fb0");  // Adjust as needed
+    if (fb_fd < 0) {
+        std::cerr << "Failed to initialize framebuffer output" << std::endl;
+        return -1;
+    }
+
     vector<vector<float>> embedding_arr;
     vector<float> embedding_norm_arr;
     vector<string> embedding_class_arr;
@@ -565,18 +626,16 @@ int main(int argc, char* argv[]) {
         auto fr_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fr_end - fr_start);
         std::cout << "fr time: " << fr_duration.count() << " ms" << std::endl;
 
-        //display
-        auto display_start = std::chrono::high_resolution_clock::now();
-        imshow("Video Processing", frame);
-        if (waitKey(30) >= 0) break;
-        auto display_end = std::chrono::high_resolution_clock::now();
-        auto display_duration = std::chrono::duration_cast<std::chrono::milliseconds>(display_end - display_start);
-        std::cout << "display time: " << display_duration.count() << " ms" << std::endl;
+        auto display_hdmi_start = std::chrono::high_resolution_clock::now();
+        displayFramebuffer(fb_fd, frame);
+        auto display_hdmi_end = std::chrono::high_resolution_clock::now();
+        auto display_hdmi_duration = std::chrono::duration_cast<std::chrono::milliseconds>(display_hdmi_end - display_hdmi_start);
+        std::cout << "display_hdmi time: " << display_hdmi_duration.count() << " ms" << std::endl;
 
     }
 
     video.release();
-    destroyAllWindows();
+    close(fb_fd);
 
     return 0;
 }
