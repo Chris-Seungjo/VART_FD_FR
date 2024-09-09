@@ -55,7 +55,17 @@ struct FaceDetectResult {
     vector<BoundingBox> rects;
 };
 
+struct YUVVideoInfo {
+    int width;
+    int height;
+    int fps;
+    std::ifstream file;
+};
+
+YUVVideoInfo yuv_video;
+
 // Function prototypes
+cv::Mat readYUV420Frame(YUVVideoInfo& video);
 void NormalizeInputData(const unsigned char* input, int rows, int cols, int channels,
                         int stride, const vector<float>& mean,
                         const vector<float>& scale, int8_t* data);
@@ -79,6 +89,23 @@ void runFacerecog(vart::Runner* runner, const Mat& frame, const FaceDetectResult
                   const vector<vector<float>>& embedding_arr,
                   const vector<float>& embedding_norm_arr,
                   const vector<string>& embedding_class_arr);
+
+// Function to read a YUV420 frame from file
+cv::Mat readYUV420Frame(YUVVideoInfo& video) {
+    int frameSize = video.width * video.height * 3 / 2;
+    std::vector<uint8_t> yuv_data(frameSize);
+
+    if (video.file.read(reinterpret_cast<char*>(yuv_data.data()), frameSize)) {
+        cv::Mat yuv(video.height * 3 / 2, video.width, CV_8UC1, yuv_data.data());
+        cv::Mat bgr;
+        cv::cvtColor(yuv, bgr, cv::COLOR_YUV2BGR_I420);
+
+        std::cout << "Frame size: " << bgr.size() << ", channels: " << bgr.channels() << std::endl;
+
+        return bgr;
+    }
+    return cv::Mat();
+}         
 
 int initFramebufferOutput(const char* device) {
     int fb_fd = open(device, O_RDWR);
@@ -208,11 +235,11 @@ FaceDetectResult runFacedetect(vart::Runner* runner, const Mat& frame) {
     auto fd_resize_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_resize_end - fd_resize_start);
     std::cout << "fd_resize time: " << fd_resize_duration.count() << " ms" << std::endl;
 
-    auto fd_setImageBGR_start = std::chrono::high_resolution_clock::now();
-    setImageBGR({resized}, runner, imageInputs.data(), mean, scale);
-    auto fd_setImageBGR_end = std::chrono::high_resolution_clock::now();
-    auto fd_setImageBGR_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_setImageBGR_end - fd_setImageBGR_start);
-    std::cout << "fd_setImageBGR time: " << fd_setImageBGR_duration.count() << " ms" << std::endl;
+    // auto fd_setImageBGR_start = std::chrono::high_resolution_clock::now();
+    // setImageBGR({resized}, runner, imageInputs.data(), mean, scale);
+    // auto fd_setImageBGR_end = std::chrono::high_resolution_clock::now();
+    // auto fd_setImageBGR_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_setImageBGR_end - fd_setImageBGR_start);
+    // std::cout << "fd_setImageBGR time: " << fd_setImageBGR_duration.count() << " ms" << std::endl;
 
 
     auto fd_inf_start = std::chrono::high_resolution_clock::now();
@@ -236,14 +263,12 @@ FaceDetectResult runFacedetect(vart::Runner* runner, const Mat& frame) {
     const float nms_threshold = 0.3f;
     
     auto fd_post_start = std::chrono::high_resolution_clock::now();
-    //Change int to float
-    //이 부분이 필요한가?
     auto fd_post_type_conversion_start = std::chrono::high_resolution_clock::now();
     vector<float> pred(out_dims[1] * out_dims[2] * 2);
     for (int i = 0; i < out_dims[1] * out_dims[2]; ++i) {
-        pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);  //Calculate probability of background
-        pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;   //Calculate probability of face
-    }
+        pred[i * 2] = 1.0f - (FCResult[i * 2] * output_scale);
+        pred[i * 2 + 1] = FCResult[i * 2 + 1] * output_scale;
+    }    
     auto fd_post_type_conversion_end = std::chrono::high_resolution_clock::now();
     auto fd_post_type_conversion_duration = std::chrono::duration_cast<std::chrono::milliseconds>(fd_post_type_conversion_end - fd_post_type_conversion_start);
     std::cout << "fd_post_type_conversion time: " << fd_post_type_conversion_duration.count() << " ms" << std::endl;
@@ -563,24 +588,37 @@ auto measureTime(const std::function<void()>& func) {
 
 int main(int argc, char* argv[]) {
     auto main_init_start = std::chrono::high_resolution_clock::now();
-    if (argc != 4) {
-        cout << "Usage: " << argv[0] << " <video_file> <fd_model_file> <fr_model_file>" << endl;
-        return -1;
-    }
+    // if (argc != 4) {
+    //     cout << "Usage: " << argv[0] << " <video_file> <fd_model_file> <fr_model_file>" << endl;
+    //     return -1;
+    // }
 
-    argv[1] = "/home/root/VART/video_fd_fr/all5_720p.mp4";
-    argv[2] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
-    argv[3] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
+    argv[1] = "/home/root/VART/video_fd_fr/all5_640x360.yuv";
+    argv[2] = "640";
+    argv[3] = "360";
+    argv[4] = "60";
+    argv[5] = "/usr/share/vitis_ai_library/models/densebox_640_360/densebox_640_360.xmodel";
+    argv[6] = "/usr/share/vitis_ai_library/models/InceptionResnetV1/InceptionResnetV1.xmodel";
 
+    // Initialize YUV video
+    yuv_video.width = std::stoi(argv[2]);
+    yuv_video.height = std::stoi(argv[3]);
+    yuv_video.fps = std::stoi(argv[4]);
+    yuv_video.file.open(argv[1], std::ios::binary);
+  
     string video_path = argv[1];
-    string fd_model_path = argv[2];
-    string fr_model_path = argv[3];
+    string fd_model_path = argv[5];
+    string fr_model_path = argv[6];
 
-    VideoCapture video(video_path);
-    if (!video.isOpened()) {
-        cerr << "Error opening video file" << endl;
-        return -1;
-    }
+    // Initialize video capture
+        if (!yuv_video.file.is_open()) {
+            std::cout << "Failed to open YUV file: " << argv[1] << std::endl;
+            return -1;
+        }
+
+    std::cout << "Processing YUV video: " << argv[1] << std::endl;
+    std::cout << "Resolution: " << yuv_video.width << "x" << yuv_video.height << std::endl;
+    std::cout << "FPS: " << yuv_video.fps << std::endl;
 
     int fb_fd = initFramebufferOutput("/dev/fb0");  // Adjust as needed
     if (fb_fd < 0) {
@@ -618,10 +656,13 @@ int main(int argc, char* argv[]) {
 
         //read
         auto read_start = std::chrono::high_resolution_clock::now();
-        if (!video.read(frame)) {
-            std::cout << "End of video stream" << std::endl;
-            return -1;
+        cv::Mat frame = readYUV420Frame(yuv_video);
+        
+        if (frame.empty()) {
+        std::cout << "End of YUV video or failed to read frame." << std::endl;
+        break;
         }
+                
         auto read_end = std::chrono::high_resolution_clock::now();
         auto read_duration = std::chrono::duration_cast<std::chrono::milliseconds>(read_end - read_start);
         std::cout << "Read time: " << read_duration.count() << " ms" << std::endl;
@@ -648,7 +689,9 @@ int main(int argc, char* argv[]) {
 
     }
 
-    video.release();
+    if (yuv_video.file.is_open()) {
+        yuv_video.file.close();
+    }   
     close(fb_fd);
 
     return 0;
